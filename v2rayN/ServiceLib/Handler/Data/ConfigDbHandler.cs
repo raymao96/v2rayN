@@ -2451,7 +2451,7 @@ public static class ConfigDbHandler
         //Bypass the mainland
         var item2 = new RoutingItem()
         {
-            Remarks = $"{ver}绕过大陆(Whitelist)",
+            Remarks = $"{ver}繞過大陸(Whitelist)",
             Url = string.Empty,
             Sort = maxSort + 1,
         };
@@ -2460,7 +2460,7 @@ public static class ConfigDbHandler
         //Blacklist
         var item3 = new RoutingItem()
         {
-            Remarks = $"{ver}黑名单(Blacklist)",
+            Remarks = $"{ver}黑名單(Blacklist)",
             Url = string.Empty,
             Sort = maxSort + 2,
         };
@@ -2469,7 +2469,7 @@ public static class ConfigDbHandler
         //Global
         var item1 = new RoutingItem()
         {
-            Remarks = $"{ver}全局(Global)",
+            Remarks = $"{ver}全域(Global)",
             Url = string.Empty,
             Sort = maxSort + 3,
         };

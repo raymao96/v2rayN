@@ -256,7 +256,7 @@
     <value>操作失敗，請檢查後重試</value>
   </data>
   <data name="PleaseFillRemarks" xml:space="preserve">
-    <value>請填寫別名</value>
+    <value>請填寫自訂名稱</value>
   </data>
   <data name="PleaseSelectEncryption" xml:space="preserve">
     <value>請選擇加密方式</value>
@@ -307,7 +307,7 @@
     <value>{0}，至少需填寫其中一項。</value>
   </data>
   <data name="LvRemarks" xml:space="preserve">
-    <value>別名</value>
+    <value>自訂名稱</value>
   </data>
   <data name="LvUrl" xml:space="preserve">
     <value>可選位址 (URL)</value>
@@ -493,7 +493,7 @@
     <value>移除所選 (多選)</value>
   </data>
   <data name="menuSetDefaultServer" xml:space="preserve">
-    <value>設為活動</value>
+    <value>啟用此節點</value>
   </data>
   <data name="menuClearServerStatistics" xml:space="preserve">
     <value>清除所有服務統計資料</value>
@@ -610,7 +610,7 @@
     <value>埠 (port)</value>
   </data>
   <data name="TbRemarks" xml:space="preserve">
-    <value>別名 (remarks)</value>
+    <value>自訂名稱 (remarks)</value>
   </data>
   <data name="TbSecurity" xml:space="preserve">
     <value>加密方式 (security)</value>
@@ -673,7 +673,7 @@
     <value>啟動後隱藏視窗</value>
   </data>
   <data name="TbSettingsAutoUpdateInterval" xml:space="preserve">
-    <value>自動更新 Geo 檔案的間隔 (小時)</value>
+    <value>自動更新 Geo 檔案的頻率 (小時)</value>
   </data>
   <data name="TbSettingsCore" xml:space="preserve">
     <value>Core: 基礎設定</value>
@@ -820,7 +820,7 @@
     <value>移除所選規則</value>
   </data>
   <data name="menuRoutingAdvancedSetDefault" xml:space="preserve">
-    <value>設為活動規則</value>
+    <value>啟用此規則</value>
   </data>
   <data name="TbdomainStrategy" xml:space="preserve">
     <value>域名解析策略</value>
@@ -895,7 +895,7 @@
     <value>執行 Core 失敗，請查看提示訊息</value>
   </data>
   <data name="LvFilter" xml:space="preserve">
-    <value>別名正則過濾</value>
+    <value>自訂名稱正則過濾</value>
   </data>
   <data name="TbDisplayLog" xml:space="preserve">
     <value>顯示日誌</value>
@@ -925,7 +925,7 @@
     <value>編輯</value>
   </data>
   <data name="TbSettingsDoubleClick2Activate" xml:space="preserve">
-    <value>主介面輕按兩下設為活動</value>
+    <value>主介面輕按兩下以啟用</value>
   </data>
   <data name="SpeedtestingCompleted" xml:space="preserve">
     <value>測試完成</value>
@@ -994,7 +994,7 @@
     <value>更多位址 (url)，用逗號 (,) 分隔；訂閱轉換將失效</value>
   </data>
   <data name="LvAutoUpdateInterval" xml:space="preserve">
-    <value>自動更新間隔 (分鐘)</value>
+    <value>自動更新頻率 (分鐘)</value>
   </data>
   <data name="TbSettingsLogEnabledToFile" xml:space="preserve">
     <value>啟動日誌存到檔案</value>
@@ -1063,13 +1063,13 @@
     <value>自訂 HTTP 出站請求頭，請輸入值為字串或字串陣列的 JSON 物件。</value>
   </data>
   <data name="LvPrevProfile" xml:space="preserve">
-    <value>前置代理節點別名</value>
+    <value>前置代理節點名稱</value>
   </data>
   <data name="LvNextProfile" xml:space="preserve">
-    <value>落地代理節點別名</value>
+    <value>落地代理節點名稱</value>
   </data>
   <data name="LvPrevProfileTip" xml:space="preserve">
-    <value>請確保節點別名存在並且唯一</value>
+    <value>請輸入不重複的節點名稱</value>
   </data>
   <data name="TbSettingsTunAutoRoute" xml:space="preserve">
     <value>自動路由</value>
@@ -1138,7 +1138,7 @@
     <value>分片大小範圍(位元組)，如 50-100。第一個值必須 &lt;= 第二個值。留空使用預設值。</value>
   </data>
   <data name="TbSettingsFragmentInterval" xml:space="preserve">
-    <value>分片間隔</value>
+    <value>分片頻率</value>
   </data>
   <data name="TbSettingsFragmentIntervalTip" xml:space="preserve">
     <value>分片間延遲(毫秒)，如 10-20。範圍 1-100。第一個值必須 &lt;= 第二個值。留空使用預設值。</value>
@@ -1222,19 +1222,19 @@
     <value>目前代理</value>
   </data>
   <data name="menuRulemode" xml:space="preserve">
-    <value>規則模式</value>
+    <value>分流模式</value>
   </data>
   <data name="menuModeDirect" xml:space="preserve">
     <value>直連</value>
   </data>
   <data name="menuModeGlobal" xml:space="preserve">
-    <value>全局</value>
+    <value>全域</value>
   </data>
   <data name="menuModeNothing" xml:space="preserve">
-    <value>隨原配置</value>
+    <value>沿用原設定</value>
   </data>
   <data name="menuModeRule" xml:space="preserve">
-    <value>規則</value>
+    <value>分流</value>
   </data>
   <data name="menuDelaytest" xml:space="preserve">
     <value>延遲測試</value>
@@ -1246,7 +1246,7 @@
     <value>重新整理</value>
   </data>
   <data name="menuProxiesSelectActivity" xml:space="preserve">
-    <value>設為活動節點</value>
+    <value>啟用此節點</value>
   </data>
   <data name="TbSettingsDomainStrategy4Out" xml:space="preserve">
     <value>Outbound 預設解析策略</value>
@@ -1315,7 +1315,7 @@
     <value>主機過濾</value>
   </data>
   <data name="TipActiveServer" xml:space="preserve">
-    <value>活動</value>
+    <value>啟用中</value>
   </data>
   <data name="TbSettingsGeoFilesSource" xml:space="preserve">
     <value>Geo 檔案來源 (可選)</value>
@@ -1396,7 +1396,7 @@
     <value>主題</value>
   </data>
   <data name="menuCopyProxyCmdToClipboard" xml:space="preserve">
-    <value>複製終端代理指令至剪貼簿</value>
+    <value>複製終端機代理指令至剪貼簿</value>
   </data>
   <data name="SpeedtestingTestFailedPart" xml:space="preserve">
     <value>開始對失敗部分進行重新測試，剩餘 {0} 個。可按 ESC 終止...</value>
@@ -1420,10 +1420,10 @@
     <value>匯出</value>
   </data>
   <data name="TbSettingsIPAPIUrl" xml:space="preserve">
-    <value>目前連接資訊測試地址</value>
+    <value>目前連線資訊測試位址</value>
   </data>
   <data name="TbRuleOutboundTagTip" xml:space="preserve">
-    <value>可以填寫節點別名，請確保存在並唯一</value>
+    <value>可輸入自訂節點名稱（不可重複）</value>
   </data>
   <data name="SudoIncorrectPasswordTip" xml:space="preserve">
     <value>密碼錯誤，請重試。</value>
@@ -1660,7 +1660,7 @@
     <value>若未設定或為 "AsIs"，由遠端伺服器的 DNS 解析；否則將使用內建 DNS 模組。</value>
   </data>
   <data name="TbHopInt7" xml:space="preserve">
-    <value>連接埠跳轉間隔</value>
+    <value>連接埠跳轉頻率</value>
   </data>
   <data name="menuServerListPreview" xml:space="preserve">
     <value>子配置項預覽</value>
@@ -1792,11 +1792,10 @@
     <value>有更新</value>
   </data>
   <data name="MsgAllowInsecureDeprecated" xml:space="preserve">
-    <value>目前節點使用未加密連接，您的通訊可能會被威權政府掌控的網路中間設施直接查看
-為了安全，此類節點無法透過 26.2.6+ 版本的Xray核心連接
-如果是自建節點請啟用 TLS 等安全加密，或固定憑證 pinSHA256
-若機場節點請聯絡服務商完成技術升級，如服務商拒絕配合，建議更換更重視用戶安全的服務商
-更多的信息，請訪問 https://github.com/2dust/v2rayN/discussions/9460</value>
+    <value>目前節點使用未加密連線，您的通訊內容可能會被網路審查機構的中間人設施直接監看
+        基於安全考量，這類節點無法透過 26.2.6+ 版本的 Xray 核心連線
+        若是自架節點，請啟用 TLS 等安全加密，或設定憑證指紋固定（pinSHA256）
+        若是訂閱節點，請聯繫服務商進行技術升級。</value>
   </data>
   <data name="TbVerifyPeerCertByName" xml:space="preserve">
     <value>Verify Peer Cert By Name</value>
@@ -1952,13 +1951,13 @@
     <value>存取憑證 Secrets (AK,SK / OAuth)</value>
   </data>
   <data name="XdriveS3Endpoint" xml:space="preserve">
-    <value>S3 終端節點</value>
+    <value>S3 Endpoint</value>
   </data>
   <data name="XdriveS3Region" xml:space="preserve">
-    <value>S3 區域</value>
+    <value>S3 Region</value>
   </data>
   <data name="XdriveS3Bucket" xml:space="preserve">
-    <value>S3 儲存桶</value>
+    <value>S3 Bucket</value>
   </data>
   <data name="XdriveS3PathStyle" xml:space="preserve">
     <value>S3 強制路徑樣式 (PathStyle)</value>
