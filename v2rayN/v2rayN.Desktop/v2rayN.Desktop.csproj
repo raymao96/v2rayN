@@ -2,6 +2,8 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
+		<SatelliteResourceLanguages>$(AppSatelliteLanguage);en</SatelliteResourceLanguages>
+		<ApplicationManifest Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-')) Or ('$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Windows')))">../v2rayN/app.manifest</ApplicationManifest>
 		<ApplicationIcon>Assets\v2rayN.ico</ApplicationIcon>
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

@@ -402,6 +402,9 @@
   <data name="menuCheckAndUpdate" xml:space="preserve">
     <value>Check and Update</value>
   </data>
+  <data name="menuCheckCoreUpdate" xml:space="preserve">
+    <value>Check for Core Updates</value>
+  </data>
   <data name="menuCheckUpdate" xml:space="preserve">
     <value>Check Update</value>
   </data>

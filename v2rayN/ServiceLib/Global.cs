@@ -532,15 +532,8 @@ public class Global
 
     public static readonly List<LanguageOption> LanguageOptions =
     [
-        new("zh-Hans", "简体中文"),
         new("zh-Hant", "繁體中文"),
-        new("en", "English"),
-        new("fa", "فارسی"),
-        new("fr", "Français"),
-        new("ru", "Русский"),
-        new("hu", "Magyar"),
-        new("id", "Bahasa Indonesia"),
-        new("az", "Azərbaycan dili")
+        new("en", "English")
     ];
 
     public static readonly List<string> Languages =

@@ -970,6 +970,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Check for Core Updates 的本地化字符串。
+        /// </summary>
+        public static string menuCheckCoreUpdate {
+            get {
+                return ResourceManager.GetString("menuCheckCoreUpdate", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   查找类似 Check Update 的本地化字符串。
         /// </summary>
         public static string menuCheckUpdate {

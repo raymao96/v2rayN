@@ -80,7 +80,6 @@ public partial class MainWindowViewModel : MyReactiveObject
 
     [Reactive] public partial bool BlIsWindows { get; set; }
 
-    [Reactive] public partial bool BlNewUpdate { get; set; }
 
     [Reactive] public partial EGirdOrientation MainGirdOrientation { get; set; }
 
@@ -263,11 +262,6 @@ public partial class MainWindowViewModel : MyReactiveObject
             .AsObservable()
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .SubscribeAsync(async _ => await AddServerViaClipboardAsync(null));
-
-        AppEvents.HasUpdateNotified
-            .AsObservable()
-            .ObserveOn(RxSchedulers.MainThreadScheduler)
-            .Subscribe(bl => BlNewUpdate = bl);
 
         #endregion AppEvents
 

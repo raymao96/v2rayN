@@ -13,4 +13,11 @@
         />
 		</dependentAssembly>
 	</dependency>
+	<asmv3:trustInfo>
+		<asmv3:security>
+			<asmv3:requestedPrivileges>
+				<asmv3:requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+			</asmv3:requestedPrivileges>
+		</asmv3:security>
+	</asmv3:trustInfo>
 </assembly>
