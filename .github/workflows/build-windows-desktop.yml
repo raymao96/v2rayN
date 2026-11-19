@@ -17,8 +17,6 @@ permissions:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    with:
-      target: windows
 
   release-zip:
     if: inputs.release_tag != ''
@@ -32,7 +30,6 @@ jobs:
   build-aot:
     uses: ./.github/workflows/build.yml
     with:
-      target: windows
       isAot: true
 
   release-aot-zip:

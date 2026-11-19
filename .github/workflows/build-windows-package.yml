@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: build Windows all architectures
+    name: build Windows x64
     runs-on: windows-latest
     permissions:
       contents: read
@@ -51,7 +51,7 @@ jobs:
         with:
           dotnet-version: 10.0.1xx
 
-      - name: Build and package all Windows installers
+      - name: Build and package Windows x64 installers
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -61,7 +61,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $options = @{
-            Arch = 'all'
+            Arch = 'x64'
             Flavor = 'all'
           }
           if ($env:RELEASE_TAG) {
@@ -78,18 +78,14 @@ jobs:
           & $scriptPath @options
           if (-not $?) { throw 'v2rayN installer packaging failed.' }
 
-      - name: Verify all EXE installers
+      - name: Verify Windows x64 installers
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $expected = foreach ($arch in @('86', '64', 'arm64')) {
-            foreach ($flavor in @('', '-desktop')) {
-              "v2rayN-windows-${arch}${flavor}.exe"
-            }
-          }
+          $expected = @('v2rayN-windows-64.exe', 'v2rayN-windows-64-desktop.exe')
           $all = @(Get-ChildItem -LiteralPath dist -File -Filter 'v2rayN-windows-*.exe')
-          if ($all.Count -ne 6) {
-            throw "Expected 6 installers, found $($all.Count)."
+          if ($all.Count -ne $expected.Count) {
+            throw "Expected $($expected.Count) installers, found $($all.Count)."
           }
           foreach ($pattern in $expected) {
             $files = @(Get-ChildItem -LiteralPath dist -File -Filter $pattern)
@@ -102,27 +98,28 @@ jobs:
             Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256 | Format-List
           }
 
-      - name: Upload all Windows installers
+      - name: Upload Windows x64 installers
         uses: actions/upload-artifact@v7
         with:
           name: release-windows-installers
           path: dist/v2rayN-windows-*.exe
           if-no-files-found: error
           compression-level: 0
+          overwrite: true
 
   release:
-    name: sign and upload windows ${{ matrix.arch }} ${{ matrix.flavor }}
+    name: sign and upload windows x64 ${{ matrix.flavor }}
     if: inputs.release_tag != ''
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86, x64, arm64]
         flavor: [wpf, desktop]
     uses: ./.github/workflows/upload-sign.yml
     with:
       release_tag: ${{ inputs.release_tag }}
+      desktop_release: true
       artifact_name: release-windows-installers
-      file_pattern: "v2rayN-windows-${{ matrix.arch == 'x86' && '86' || matrix.arch == 'x64' && '64' || 'arm64' }}${{ matrix.flavor == 'desktop' && '-desktop' || '' }}.exe"
+      file_pattern: "v2rayN-windows-64${{ matrix.flavor == 'desktop' && '-desktop' || '' }}.exe"
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
