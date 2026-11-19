@@ -115,6 +115,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 No profiles yet. Import a profile or add a subscription. 的本地化字符串。
+        /// </summary>
+        public static string NoProfilesAvailable {
+            get {
+                return ResourceManager.GetString("NoProfilesAvailable", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   查找类似 Invalid configuration format. 的本地化字符串。
         /// </summary>
         public static string ConfigurationFormatIncorrect {
@@ -177,6 +186,12 @@ namespace ServiceLib.Resx {
             }
         }
         
+        public static string FailedImportServerViaClipboard {
+            get {
+                return ResourceManager.GetString("FailedImportServerViaClipboard", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   查找类似 Failed to import configuration 的本地化字符串。
         /// </summary>

@@ -252,7 +252,7 @@ public partial class StatusBarViewModel : MyReactiveObject
         }
         else
         {
-            RunningServerDisplay = ResUI.CheckServerSettings;
+            RunningServerDisplay = ResUI.NoProfilesAvailable;
             RunningServerToolTipText = GetRunningServerToolTipText(RunningServerDisplay);
         }
     }

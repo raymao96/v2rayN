@@ -402,3 +402,10 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# macOS Finder metadata at any directory depth
+.DS_Store
+
+# Local collaboration files
+*.md
+worklogs/
