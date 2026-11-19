@@ -6,6 +6,10 @@ on:
       release_tag:
         required: true
         type: string
+      desktop_release:
+        required: false
+        type: boolean
+        default: false
       artifact_name:
         required: true
         type: string
@@ -29,6 +33,25 @@ jobs:
   upload:
     runs-on: ubuntu-26.04
     steps:
+    - name: Resolve release identity
+      id: release
+      shell: bash
+      env:
+        VERSION_INPUT: ${{ inputs.release_tag }}
+        REGIONAL_RELEASE: ${{ inputs.desktop_release && (github.ref_name == 'tw' || github.ref_name == 'cn') }}
+      run: |
+        tag="$VERSION_INPUT"
+        title="$tag"
+        if [[ "$REGIONAL_RELEASE" == true ]]; then
+          version="v${VERSION_INPUT#v}"
+          tag="${GITHUB_REF_NAME}-$version"
+          region="$(printf '%s' "$GITHUB_REF_NAME" | tr '[:lower:]' '[:upper:]')"
+          title="$region $version"
+          echo "target_commit=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+        fi
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+        echo "title=$title" >> "$GITHUB_OUTPUT"
+
     - name: Download release artifact
       uses: actions/download-artifact@v8
       with:
@@ -61,7 +84,9 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         file: dist/${{ inputs.file_pattern }}
-        tag: ${{ inputs.release_tag }}
+        tag: ${{ steps.release.outputs.tag }}
+        release_name: ${{ steps.release.outputs.title }}
+        target_commit: ${{ steps.release.outputs.target_commit }}
         file_glob: true
         prerelease: true
         overwrite: true
@@ -70,7 +95,9 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         file: dist/${{ inputs.file_pattern }}.sig
-        tag: ${{ inputs.release_tag }}
+        tag: ${{ steps.release.outputs.tag }}
+        release_name: ${{ steps.release.outputs.title }}
+        target_commit: ${{ steps.release.outputs.target_commit }}
         file_glob: true
         prerelease: true
         overwrite: true

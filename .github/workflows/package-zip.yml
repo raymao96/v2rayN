@@ -93,6 +93,7 @@ jobs:
     uses: ./.github/workflows/upload-sign.yml
     with:
       release_tag: ${{ inputs.release_tag }}
+      desktop_release: true
       artifact_name: release-${{ inputs.target }}-x64${{ inputs.isAot && '-aot' || '' }}
       file_pattern: '*.zip'
     secrets:

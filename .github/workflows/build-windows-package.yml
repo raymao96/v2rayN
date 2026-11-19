@@ -117,6 +117,7 @@ jobs:
     uses: ./.github/workflows/upload-sign.yml
     with:
       release_tag: ${{ inputs.release_tag }}
+      desktop_release: true
       artifact_name: release-windows-installers
       file_pattern: "v2rayN-windows-64${{ matrix.flavor == 'desktop' && '-desktop' || '' }}.exe"
     secrets:
