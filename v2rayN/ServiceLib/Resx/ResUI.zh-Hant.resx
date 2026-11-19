@@ -121,10 +121,13 @@
     <value>匯出分享連結至剪貼簿成功</value>
   </data>
   <data name="CheckServerSettings" xml:space="preserve">
-    <value>配置項目無效，請檢查或重新選擇</value>
+    <value>無法使用這個節點，請檢查節點設定或改用其他節點</value>
+  </data>
+  <data name="NoProfilesAvailable" xml:space="preserve">
+    <value>尚未新增節點，請匯入節點或加入訂閱</value>
   </data>
   <data name="ConfigurationFormatIncorrect" xml:space="preserve">
-    <value>設定格式不正確</value>
+    <value>無法讀取節點連結，請確認格式是否正確</value>
   </data>
   <data name="CustomServerTips" xml:space="preserve">
     <value>注意，自訂設定完全依賴您自行輸入的內容，部分功能可能無法使用。如需啟用系統代理，請手動調整監聽埠。</value>
@@ -136,10 +139,10 @@
     <value>轉換設定失敗</value>
   </data>
   <data name="FailedGenDefaultConfiguration" xml:space="preserve">
-    <value>生成預設設定檔失敗</value>
+    <value>無法產生代理核心的設定檔</value>
   </data>
   <data name="FailedGetDefaultConfiguration" xml:space="preserve">
-    <value>取得預設設定失敗</value>
+    <value>無法讀取代理核心的設定範本</value>
   </data>
   <data name="FailedImportedCustomServer" xml:space="preserve">
     <value>匯入自訂設定失敗</value>
@@ -208,25 +211,25 @@
     <value>下載 Core 成功</value>
   </data>
   <data name="MsgFailedImportSubscription" xml:space="preserve">
-    <value>匯入訂閱內容失敗</value>
+    <value>無法將訂閱內容匯入節點清單</value>
   </data>
   <data name="MsgGetSubscriptionSuccessfully" xml:space="preserve">
-    <value>獲取訂閱內容成功</value>
+    <value>已下載訂閱內容</value>
   </data>
   <data name="MsgNoValidSubscription" xml:space="preserve">
-    <value>未設定有效的訂閱</value>
+    <value>找不到可更新的訂閱，請確認已加入訂閱網址</value>
   </data>
   <data name="MsgParsingSuccessfully" xml:space="preserve">
     <value>解析 {0} 成功</value>
   </data>
   <data name="MsgStartGettingSubscriptions" xml:space="preserve">
-    <value>開始獲取訂閱內容</value>
+    <value>正在下載訂閱內容</value>
   </data>
   <data name="MsgStartUpdating" xml:space="preserve">
     <value>開始更新 {0}...</value>
   </data>
   <data name="MsgSubscriptionDecodingFailed" xml:space="preserve">
-    <value>無效的訂閱內容</value>
+    <value>訂閱沒有回傳內容，請確認訂閱網址是否正確</value>
   </data>
   <data name="MsgUnpacking" xml:space="preserve">
     <value>正在解壓......</value>
@@ -256,7 +259,7 @@
     <value>操作失敗，請檢查後重試</value>
   </data>
   <data name="PleaseFillRemarks" xml:space="preserve">
-    <value>請填寫別名</value>
+    <value>請填寫自訂名稱</value>
   </data>
   <data name="PleaseSelectEncryption" xml:space="preserve">
     <value>請選擇加密方式</value>
@@ -265,7 +268,7 @@
     <value>請選擇協定</value>
   </data>
   <data name="PleaseSelectServer" xml:space="preserve">
-    <value>請先選擇設定</value>
+    <value>請先在清單中選取節點</value>
   </data>
   <data name="RemoveDuplicateServerResult" xml:space="preserve">
     <value>去重完成。原數量: {0}，現數量: {1}。</value>
@@ -284,6 +287,9 @@
   </data>
   <data name="SuccessfullyImportedCustomServer" xml:space="preserve">
     <value>成功匯入自訂節點</value>
+  </data>
+  <data name="FailedImportServerViaClipboard" xml:space="preserve">
+    <value>無法從剪貼簿匯入節點，請複製完整的節點連結後再試一次</value>
   </data>
   <data name="SuccessfullyImportedServerViaClipboard" xml:space="preserve">
     <value>成功從剪貼簿匯入 {0} 個節點</value>
@@ -307,7 +313,7 @@
     <value>{0}，至少需填寫其中一項。</value>
   </data>
   <data name="LvRemarks" xml:space="preserve">
-    <value>別名</value>
+    <value>自訂名稱</value>
   </data>
   <data name="LvUrl" xml:space="preserve">
     <value>可選位址 (URL)</value>
@@ -412,7 +418,7 @@
     <value>關閉</value>
   </data>
   <data name="menuExit" xml:space="preserve">
-    <value>退出</value>
+    <value>結束應用程式</value>
   </data>
   <data name="menuGlobalHotkeySetting" xml:space="preserve">
     <value>全域快速鍵設定</value>
@@ -433,7 +439,7 @@
     <value>路由設定</value>
   </data>
   <data name="menuServers" xml:space="preserve">
-    <value>設定檔</value>
+    <value>節點</value>
   </data>
   <data name="menuSetting" xml:space="preserve">
     <value>設定</value>
@@ -460,16 +466,16 @@
     <value>系統代理</value>
   </data>
   <data name="menuSystemProxyClear" xml:space="preserve">
-    <value>清除系統代理</value>
+    <value>關閉系統代理</value>
   </data>
   <data name="menuSystemProxyNothing" xml:space="preserve">
-    <value>不改變系統代理</value>
+    <value>保留原設定</value>
   </data>
   <data name="menuSystemProxyPac" xml:space="preserve">
     <value>PAC 模式</value>
   </data>
   <data name="menuSystemProxySet" xml:space="preserve">
-    <value>自動設定系統代理</value>
+    <value>開啟系統代理</value>
   </data>
   <data name="TbSettingsColor" xml:space="preserve">
     <value>顏色</value>
@@ -493,7 +499,7 @@
     <value>移除所選 (多選)</value>
   </data>
   <data name="menuSetDefaultServer" xml:space="preserve">
-    <value>設為活動</value>
+    <value>啟用此節點</value>
   </data>
   <data name="menuClearServerStatistics" xml:space="preserve">
     <value>清除所有服務統計資料</value>
@@ -610,7 +616,7 @@
     <value>埠 (port)</value>
   </data>
   <data name="TbRemarks" xml:space="preserve">
-    <value>別名 (remarks)</value>
+    <value>自訂名稱 (remarks)</value>
   </data>
   <data name="TbSecurity" xml:space="preserve">
     <value>加密方式 (security)</value>
@@ -673,7 +679,7 @@
     <value>啟動後隱藏視窗</value>
   </data>
   <data name="TbSettingsAutoUpdateInterval" xml:space="preserve">
-    <value>自動更新 Geo 檔案的間隔 (小時)</value>
+    <value>自動更新 Geo 檔案的頻率 (小時)</value>
   </data>
   <data name="TbSettingsCore" xml:space="preserve">
     <value>Core: 基礎設定</value>
@@ -784,7 +790,7 @@
     <value>分享</value>
   </data>
   <data name="menuRouting" xml:space="preserve">
-    <value>路由</value>
+    <value>路由模式</value>
   </data>
   <data name="NotRunAsAdmin" xml:space="preserve">
     <value>以非管理員身份執行</value>
@@ -820,7 +826,7 @@
     <value>移除所選規則</value>
   </data>
   <data name="menuRoutingAdvancedSetDefault" xml:space="preserve">
-    <value>設為活動規則</value>
+    <value>啟用此規則</value>
   </data>
   <data name="TbdomainStrategy" xml:space="preserve">
     <value>域名解析策略</value>
@@ -895,7 +901,7 @@
     <value>執行 Core 失敗，請查看提示訊息</value>
   </data>
   <data name="LvFilter" xml:space="preserve">
-    <value>別名正則過濾</value>
+    <value>自訂名稱正則過濾</value>
   </data>
   <data name="TbDisplayLog" xml:space="preserve">
     <value>顯示日誌</value>
@@ -925,7 +931,7 @@
     <value>編輯</value>
   </data>
   <data name="TbSettingsDoubleClick2Activate" xml:space="preserve">
-    <value>主介面輕按兩下設為活動</value>
+    <value>主介面輕按兩下以啟用</value>
   </data>
   <data name="SpeedtestingCompleted" xml:space="preserve">
     <value>測試完成</value>
@@ -994,7 +1000,7 @@
     <value>更多位址 (url)，用逗號 (,) 分隔；訂閱轉換將失效</value>
   </data>
   <data name="LvAutoUpdateInterval" xml:space="preserve">
-    <value>自動更新間隔 (分鐘)</value>
+    <value>自動更新頻率 (分鐘)</value>
   </data>
   <data name="TbSettingsLogEnabledToFile" xml:space="preserve">
     <value>啟動日誌存到檔案</value>
@@ -1063,13 +1069,13 @@
     <value>自訂 HTTP 出站請求頭，請輸入值為字串或字串陣列的 JSON 物件。</value>
   </data>
   <data name="LvPrevProfile" xml:space="preserve">
-    <value>前置代理節點別名</value>
+    <value>前置代理節點名稱</value>
   </data>
   <data name="LvNextProfile" xml:space="preserve">
-    <value>落地代理節點別名</value>
+    <value>落地代理節點名稱</value>
   </data>
   <data name="LvPrevProfileTip" xml:space="preserve">
-    <value>請確保節點別名存在並且唯一</value>
+    <value>請輸入不重複的節點名稱</value>
   </data>
   <data name="TbSettingsTunAutoRoute" xml:space="preserve">
     <value>自動路由</value>
@@ -1138,7 +1144,7 @@
     <value>分片大小範圍(位元組)，如 50-100。第一個值必須 &lt;= 第二個值。留空使用預設值。</value>
   </data>
   <data name="TbSettingsFragmentInterval" xml:space="preserve">
-    <value>分片間隔</value>
+    <value>分片頻率</value>
   </data>
   <data name="TbSettingsFragmentIntervalTip" xml:space="preserve">
     <value>分片間延遲(毫秒)，如 10-20。範圍 1-100。第一個值必須 &lt;= 第二個值。留空使用預設值。</value>
@@ -1222,19 +1228,19 @@
     <value>目前代理</value>
   </data>
   <data name="menuRulemode" xml:space="preserve">
-    <value>規則模式</value>
+    <value>分流模式</value>
   </data>
   <data name="menuModeDirect" xml:space="preserve">
     <value>直連</value>
   </data>
   <data name="menuModeGlobal" xml:space="preserve">
-    <value>全局</value>
+    <value>全域</value>
   </data>
   <data name="menuModeNothing" xml:space="preserve">
-    <value>隨原配置</value>
+    <value>沿用原設定</value>
   </data>
   <data name="menuModeRule" xml:space="preserve">
-    <value>規則</value>
+    <value>分流</value>
   </data>
   <data name="menuDelaytest" xml:space="preserve">
     <value>延遲測試</value>
@@ -1246,7 +1252,7 @@
     <value>重新整理</value>
   </data>
   <data name="menuProxiesSelectActivity" xml:space="preserve">
-    <value>設為活動節點</value>
+    <value>啟用此節點</value>
   </data>
   <data name="TbSettingsDomainStrategy4Out" xml:space="preserve">
     <value>Outbound 預設解析策略</value>
@@ -1315,7 +1321,7 @@
     <value>主機過濾</value>
   </data>
   <data name="TipActiveServer" xml:space="preserve">
-    <value>活動</value>
+    <value>啟用中</value>
   </data>
   <data name="TbSettingsGeoFilesSource" xml:space="preserve">
     <value>Geo 檔案來源 (可選)</value>
@@ -1357,7 +1363,7 @@
     <value>安裝字體到系統中，選擇或填入字體名稱，重新啟動後生效</value>
   </data>
   <data name="menuExitTips" xml:space="preserve">
-    <value>確定要退出嗎？</value>
+    <value>確定要結束應用程式嗎？</value>
   </data>
   <data name="LvMemo" xml:space="preserve">
     <value>備註備忘</value>
@@ -1396,7 +1402,7 @@
     <value>主題</value>
   </data>
   <data name="menuCopyProxyCmdToClipboard" xml:space="preserve">
-    <value>複製終端代理指令至剪貼簿</value>
+    <value>複製終端機代理指令至剪貼簿</value>
   </data>
   <data name="SpeedtestingTestFailedPart" xml:space="preserve">
     <value>開始對失敗部分進行重新測試，剩餘 {0} 個。可按 ESC 終止...</value>
@@ -1420,10 +1426,10 @@
     <value>匯出</value>
   </data>
   <data name="TbSettingsIPAPIUrl" xml:space="preserve">
-    <value>目前連接資訊測試地址</value>
+    <value>目前連線資訊測試位址</value>
   </data>
   <data name="TbRuleOutboundTagTip" xml:space="preserve">
-    <value>可以填寫節點別名，請確保存在並唯一</value>
+    <value>可輸入自訂節點名稱（不可重複）</value>
   </data>
   <data name="SudoIncorrectPasswordTip" xml:space="preserve">
     <value>密碼錯誤，請重試。</value>
@@ -1519,10 +1525,10 @@
     <value>預設會套用至全域；內建 FakeIP 過濾僅支援 sing-box。</value>
   </data>
   <data name="PleaseAddAtLeastOneServer" xml:space="preserve">
-    <value>請至少新增一個設定檔</value>
+    <value>請至少加入一個節點</value>
   </data>
   <data name="TbConfigTypePolicyGroup" xml:space="preserve">
-    <value>策略組</value>
+    <value>策略群組</value>
   </data>
   <data name="TbConfigTypeProxyChain" xml:space="preserve">
     <value>鏈式代理</value>
@@ -1540,22 +1546,22 @@
     <value>最穩定</value>
   </data>
   <data name="TbPolicyGroupType" xml:space="preserve">
-    <value>策略組類型</value>
+    <value>群組類型</value>
   </data>
   <data name="menuAddPolicyGroupServer" xml:space="preserve">
-    <value>新增策略組</value>
+    <value>新增策略群組</value>
   </data>
   <data name="menuAddProxyChainServer" xml:space="preserve">
     <value>新增鏈式代理</value>
   </data>
   <data name="menuAddChildServer" xml:space="preserve">
-    <value>新增子配置</value>
+    <value>加入節點</value>
   </data>
   <data name="menuRemoveChildServer" xml:space="preserve">
-    <value>刪除子配置</value>
+    <value>從群組移除節點</value>
   </data>
   <data name="menuServerList" xml:space="preserve">
-    <value>子配置項目一，從訂閱分組中自動新增</value>
+    <value>從訂閱分組自動加入</value>
   </data>
   <data name="TbFallback" xml:space="preserve">
     <value>容錯移轉</value>
@@ -1594,7 +1600,7 @@
     <value>一鍵測試真連線延遲</value>
   </data>
   <data name="TbPolicyGroupSubChildTip" xml:space="preserve">
-    <value>自動從訂閱分組新增過濾後的配置</value>
+    <value>自動加入訂閱分組中符合篩選條件的節點</value>
   </data>
   <data name="TbCertPinning" xml:space="preserve">
     <value>憑證綁定</value>
@@ -1606,10 +1612,10 @@
 若使用自簽憑證，或系統中存在不受信任或惡意的 CA，「取得憑證」動作可能會失敗。</value>
   </data>
   <data name="TbFetchCert" xml:space="preserve">
-    <value>獲取憑證</value>
+    <value>取得憑證</value>
   </data>
   <data name="TbFetchCertChain" xml:space="preserve">
-    <value>獲取憑證鏈</value>
+    <value>取得憑證鏈</value>
   </data>
   <data name="ServerNameMustBeValidDomain" xml:space="preserve">
     <value>請設定有效的網域名稱</value>
@@ -1630,7 +1636,7 @@
     <value>macOS 在 Dock 欄顯示 (需重啟)</value>
   </data>
   <data name="menuServerList2" xml:space="preserve">
-    <value>子配置項二，從自建中選擇新增</value>
+    <value>手動選取節點</value>
   </data>
   <data name="TbEchConfigList" xml:space="preserve">
     <value>EchConfigList</value>
@@ -1660,10 +1666,10 @@
     <value>若未設定或為 "AsIs"，由遠端伺服器的 DNS 解析；否則將使用內建 DNS 模組。</value>
   </data>
   <data name="TbHopInt7" xml:space="preserve">
-    <value>連接埠跳轉間隔</value>
+    <value>連接埠跳轉頻率</value>
   </data>
   <data name="menuServerListPreview" xml:space="preserve">
-    <value>子配置項預覽</value>
+    <value>群組節點預覽</value>
   </data>
   <data name="TbFinalmask" xml:space="preserve">
     <value>Finalmask</value>
@@ -1705,13 +1711,13 @@
     <value>找不到訂閱的下一個代理 {0}。已跳過。</value>
   </data>
   <data name="menuGenGroupServer" xml:space="preserve">
-    <value>生成策略組</value>
+    <value>建立策略群組</value>
   </data>
   <data name="menuAllServers" xml:space="preserve">
-    <value>所有配置項</value>
+    <value>所有節點</value>
   </data>
   <data name="menuGenRegionGroup" xml:space="preserve">
-    <value>按區域分組</value>
+    <value>依地區分組</value>
   </data>
   <data name="menuEditCopy" xml:space="preserve">
     <value>複製</value>
@@ -1792,11 +1798,10 @@
     <value>有更新</value>
   </data>
   <data name="MsgAllowInsecureDeprecated" xml:space="preserve">
-    <value>目前節點使用未加密連接，您的通訊可能會被威權政府掌控的網路中間設施直接查看
-為了安全，此類節點無法透過 26.2.6+ 版本的Xray核心連接
-如果是自建節點請啟用 TLS 等安全加密，或固定憑證 pinSHA256
-若機場節點請聯絡服務商完成技術升級，如服務商拒絕配合，建議更換更重視用戶安全的服務商
-更多的信息，請訪問 https://github.com/2dust/v2rayN/discussions/9460</value>
+    <value>目前節點使用未加密連線，您的通訊內容可能會被網路審查機構的中間人設施直接監看
+        基於安全考量，這類節點無法透過 26.2.6+ 版本的 Xray 核心連線
+        若是自架節點，請啟用 TLS 等安全加密，或設定憑證指紋固定（pinSHA256）
+        若是訂閱節點，請聯繫服務商進行技術升級。</value>
   </data>
   <data name="TbVerifyPeerCertByName" xml:space="preserve">
     <value>Verify Peer Cert By Name</value>
@@ -1952,19 +1957,19 @@
     <value>存取憑證 Secrets (AK,SK / OAuth)</value>
   </data>
   <data name="XdriveS3Endpoint" xml:space="preserve">
-    <value>S3 終端節點</value>
+    <value>S3 Endpoint</value>
   </data>
   <data name="XdriveS3Region" xml:space="preserve">
-    <value>S3 區域</value>
+    <value>S3 Region</value>
   </data>
   <data name="XdriveS3Bucket" xml:space="preserve">
-    <value>S3 儲存桶</value>
+    <value>S3 Bucket</value>
   </data>
   <data name="XdriveS3PathStyle" xml:space="preserve">
     <value>S3 強制路徑樣式 (PathStyle)</value>
   </data>
   <data name="XdriveExtra" xml:space="preserve">
-    <value>XDRIVE 額外配置</value>
+    <value>XDRIVE 進階設定</value>
   </data>
   <data name="XdriveExtraTip" xml:space="preserve">
     <value>原始 JSON，格式： { XdriveObject }</value>

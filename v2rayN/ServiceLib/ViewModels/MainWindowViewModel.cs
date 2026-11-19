@@ -472,7 +472,7 @@ public partial class MainWindowViewModel : MyReactiveObject
             var result = await ReadTextFromClipboardInteraction.HandleSafe(RxVoid.Default);
             if (result.IsNullOrEmpty())
             {
-                NoticeManager.Instance.Enqueue(ResUI.OperationFailed);
+                NoticeManager.Instance.Enqueue(ResUI.FailedImportServerViaClipboard);
                 return;
             }
             stringData = result;
@@ -486,7 +486,7 @@ public partial class MainWindowViewModel : MyReactiveObject
         }
         else
         {
-            NoticeManager.Instance.Enqueue(ResUI.OperationFailed);
+            NoticeManager.Instance.Enqueue(ResUI.FailedImportServerViaClipboard);
         }
     }
 
@@ -677,7 +677,7 @@ public partial class MainWindowViewModel : MyReactiveObject
             var profileItem = await ConfigTextHandler.GetDefaultServer();
             if (profileItem == null)
             {
-                NoticeManager.Instance.Enqueue(ResUI.CheckServerSettings);
+                NoticeManager.Instance.Enqueue(ResUI.NoProfilesAvailable);
                 return;
             }
             var allResult = await CoreConfigContextBuilder.BuildAll(_config, profileItem);

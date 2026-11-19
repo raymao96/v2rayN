@@ -123,6 +123,9 @@
   <data name="CheckServerSettings" xml:space="preserve">
     <value>Invalid configuration, please check or reselect</value>
   </data>
+  <data name="NoProfilesAvailable" xml:space="preserve">
+    <value>No profiles yet. Import a profile or add a subscription.</value>
+  </data>
   <data name="ConfigurationFormatIncorrect" xml:space="preserve">
     <value>Invalid configuration format.</value>
   </data>
@@ -284,6 +287,9 @@
   </data>
   <data name="SuccessfullyImportedCustomServer" xml:space="preserve">
     <value>Custom configuration imported successfully</value>
+  </data>
+  <data name="FailedImportServerViaClipboard" xml:space="preserve">
+    <value>Could not import from the clipboard. Copy the full profile link and try again.</value>
   </data>
   <data name="SuccessfullyImportedServerViaClipboard" xml:space="preserve">
     <value>{0} Configurations have been imported from clipboard</value>

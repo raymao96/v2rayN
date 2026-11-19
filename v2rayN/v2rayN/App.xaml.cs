@@ -36,7 +36,7 @@ public partial class App
 
         if (!AppManager.Instance.InitApp())
         {
-            UI.Show($"Loading GUI configuration file is abnormal,please restart the application{Environment.NewLine}加载GUI配置文件异常,请重启应用");
+            UI.Show($"Could not read the application settings file. Please restart v2rayN.{Environment.NewLine}無法讀取程式設定檔，請重新啟動 v2rayN");
             Environment.Exit(0);
             return;
         }
