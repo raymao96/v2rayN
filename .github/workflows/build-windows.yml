@@ -18,7 +18,6 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      target: windows
       project: ./v2rayN/v2rayN.csproj
 
   release-zip:

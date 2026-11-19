@@ -6,7 +6,7 @@ on:
       release_tag:
         required: true
         type: string
-      target: # windows linux macos windows-desktop
+      target: # windows or windows-desktop
         required: true
         type: string
       isAot:
@@ -23,26 +23,8 @@ permissions:
 
 jobs:
   package:
-    name: package x64 arm64
-    strategy:
-      matrix:
-        arch: [ x64, arm64 ]
+    name: package Windows x64
     runs-on: ubuntu-latest
-    env:
-      Target: |- 
-        ${{
-          case(
-            inputs.target == 'windows-desktop', 'windows',
-            inputs.target
-          )
-        }}
-      Arch: |-
-        ${{
-          case(
-            matrix.arch == 'x64', '64',
-            matrix.arch
-          ) 
-        }}
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -55,9 +37,9 @@ jobs:
         INPUT_IS_AOT: ${{ inputs.isAot }}
       run: |
         set -euo pipefail
-        package_dir="v2rayN-${Target}-${Arch}"
+        package_dir="v2rayN-windows-64"
         package_file="${package_dir}.zip"
-        build_artifact_name="${{ matrix.arch }}"
+        build_artifact_name="x64"
         rename_suffix=""
         if [[ "$INPUT_IS_AOT" == "true" ]]; then
           build_artifact_name="${build_artifact_name}-aot"
@@ -84,7 +66,7 @@ jobs:
 
     - name: Get v2rayN-core-bin
       run: |
-        wget -nv -O "${{ steps.package-vars.outputs.package_file }}" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-$Target-$Arch.zip"
+        wget -nv -O "${{ steps.package-vars.outputs.package_file }}" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-windows-64.zip"
 
     - name: Package zip archive
       shell: bash
@@ -101,20 +83,19 @@ jobs:
     - name: Upload zip artifact
       uses: actions/upload-artifact@v7
       with:
-        name: release-${{ inputs.target }}-${{ matrix.arch }}${{ inputs.isAot && '-aot' || '' }}
+        name: release-${{ inputs.target }}-x64${{ inputs.isAot && '-aot' || '' }}
         path: ${{ steps.package-vars.outputs.final_package_file }}
         if-no-files-found: error
+        overwrite: true
 
   release:
-    name: sign and upload zip x64 arm64
+    name: sign and upload Windows x64 zip
     needs: package
-    strategy:
-      matrix:
-        arch: [ x64, arm64 ]
     uses: ./.github/workflows/upload-sign.yml
     with:
       release_tag: ${{ inputs.release_tag }}
-      artifact_name: release-${{ inputs.target }}-${{ matrix.arch }}${{ inputs.isAot && '-aot' || '' }}
+      desktop_release: true
+      artifact_name: release-${{ inputs.target }}-x64${{ inputs.isAot && '-aot' || '' }}
       file_pattern: '*.zip'
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
