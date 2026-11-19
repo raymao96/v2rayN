@@ -2,13 +2,12 @@ namespace ServiceLib.Models.Dto;
 
 public partial class CheckUpdateModel : ReactiveObject
 {
+    public const string GeoFiles = "GeoFiles";
+
     public bool? IsSelected { get; set; }
     public bool IsCheckPreRelease { get; set; }
-    public bool ShowCheckPreRelease { get; set; }
-    public ECoreType? CoreType { get; set; }
+    public bool ShowCheckPreRelease { get; init; }
+    public ECoreType? CoreType { get; init; }
     [Reactive] public partial string? Remarks { get; set; }
-    public string? FileName { get; set; }
-    public bool? IsFinished { get; set; }
-    public bool IsGeoFile { get; set; }
-    public string CoreTypeForStorage => IsGeoFile ? "GeoFiles" : (CoreType?.ToString() ?? "");
+    public string CoreTypeForStorage => CoreType?.ToString() ?? GeoFiles;
 }

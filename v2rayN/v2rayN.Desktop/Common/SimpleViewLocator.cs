@@ -16,7 +16,6 @@ public class SimpleViewLocator : IDataTemplate
         RegisterViewFactory<AddServer2ViewModel, AddServer2Window>();
         RegisterViewFactory<AddServerViewModel, AddServerWindow>();
         RegisterViewFactory<BackupAndRestoreViewModel, BackupAndRestoreView>();
-        RegisterViewFactory<CheckUpdateViewModel, CheckUpdateView>();
         RegisterViewFactory<ClashConnectionsViewModel, ClashConnectionsView>();
         RegisterViewFactory<ClashProxiesViewModel, ClashProxiesView>();
         RegisterViewFactory<DNSSettingViewModel, DNSSettingWindow>();

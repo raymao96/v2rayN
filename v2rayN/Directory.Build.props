@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <Version>7.25.6</Version>
+        <AppSatelliteLanguage>zh-Hans</AppSatelliteLanguage>
     </PropertyGroup>
 
     <PropertyGroup>

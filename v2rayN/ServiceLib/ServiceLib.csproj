@@ -53,6 +53,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Remove="Resx/ResUI.*.resx" />
+		<EmbeddedResource Include="Resx/ResUI.$(AppSatelliteLanguage).resx" />
 		<Compile Update="Resx\ResUI.Designer.cs">
 			<DependentUpon>ResUI.resx</DependentUpon>
 			<DesignTime>True</DesignTime>

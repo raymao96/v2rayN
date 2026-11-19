@@ -5,6 +5,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Remove="Resx/Resource.*.resx" />
+		<EmbeddedResource Include="Resx/Resource.$(AppSatelliteLanguage).resx" />
 		<Compile Update="Resx\Resource.Designer.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>

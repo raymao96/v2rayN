@@ -136,11 +136,9 @@ public static class ConfigTextHandler
             }
         }
 
-        if (config.UiItem.CurrentLanguage.IsNullOrEmpty())
+        if (!Global.Languages.Contains(config.UiItem.CurrentLanguage))
         {
-            config.UiItem.CurrentLanguage = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Equals("zh", StringComparison.CurrentCultureIgnoreCase)
-                ? Global.Languages.First()
-                : Global.Languages[2];
+            config.UiItem.CurrentLanguage = Global.Languages.First();
         }
 
         config.ConstItem ??= new ConstItem();

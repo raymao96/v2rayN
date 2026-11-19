@@ -37,10 +37,7 @@ internal static class Program
                     break;
 
                 default:
-                    // Default behavior: handle as upgrade data
-                    // Maintain backward compatibility with existing usage pattern
-                    var argData = Uri.UnescapeDataString(string.Join(" ", args));
-                    HandleUpgrade(argData);
+                    ShowHelp();
                     break;
             }
         }
@@ -73,15 +70,5 @@ internal static class Program
         Console.WriteLine("Restarting application...");
         Thread.Sleep(1000);
         Utils.StartV2RayN();
-    }
-
-    /// <summary>
-    /// Handle application upgrade with the provided data
-    /// </summary>
-    /// <param name="upgradeData">Data for the upgrade process</param>
-    private static void HandleUpgrade(string upgradeData)
-    {
-        Console.WriteLine("Upgrading application...");
-        UpgradeApp.Upgrade(upgradeData);
     }
 }

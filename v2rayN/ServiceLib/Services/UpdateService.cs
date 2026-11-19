@@ -6,45 +6,6 @@ public partial class UpdateService(DownloadService downloadService, Config confi
     private readonly Func<bool, string, Task>? _updateFunc = updateFunc;
     private static readonly string _tag = "UpdateService";
 
-    public async Task CheckUpdateGuiN(bool preRelease, CancellationToken cancellationToken = default)
-    {
-        var url = string.Empty;
-        var fileName = string.Empty;
-
-        downloadService.UpdateCompleted += (sender2, args) =>
-        {
-            if (args.Success)
-            {
-                _ = UpdateFunc(false, ResUI.MsgDownloadV2rayCoreSuccessfully);
-                _ = UpdateFunc(true, Utils.UrlEncode(fileName));
-            }
-            else
-            {
-                _ = UpdateFunc(false, args.Msg);
-            }
-        };
-        downloadService.Error += (sender2, args) =>
-        {
-            _ = UpdateFunc(false, args.GetException().Message);
-        };
-
-        await UpdateFunc(false, string.Format(ResUI.MsgStartUpdating, ECoreType.v2rayN));
-        var result = await CheckUpdateAsync(ECoreType.v2rayN, preRelease, cancellationToken);
-        if (result.Success)
-        {
-            await UpdateFunc(false, string.Format(ResUI.MsgParsingSuccessfully, ECoreType.v2rayN));
-            await UpdateFunc(false, result.Msg);
-
-            url = result.Url!;
-            fileName = Utils.GetTempPath(Utils.GetGuid());
-            await downloadService.DownloadFileAsync(new() { FileUrl = url, FilePath = fileName }, cancellationToken);
-        }
-        else
-        {
-            await UpdateFunc(false, result.Msg);
-        }
-    }
-
     public async Task CheckUpdateCore(ECoreType type, bool preRelease, CancellationToken cancellationToken = default)
     {
         var url = string.Empty;
