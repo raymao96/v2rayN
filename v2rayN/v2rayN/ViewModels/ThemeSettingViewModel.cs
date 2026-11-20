@@ -104,10 +104,21 @@ public partial class ThemeSettingViewModel : MyReactiveObject
             {
                 if (CurrentLanguage.IsNotEmpty() && _config.UiItem.CurrentLanguage != CurrentLanguage)
                 {
+                    var previousLanguage = _config.UiItem.CurrentLanguage;
                     _config.UiItem.CurrentLanguage = CurrentLanguage;
-                    Thread.CurrentThread.CurrentUICulture = new(CurrentLanguage);
-                    await ConfigTextHandler.SaveConfig();
-                    NoticeManager.Instance.Enqueue(ResUI.NeedRebootTips);
+                    if (await ConfigTextHandler.SaveConfig() != 0)
+                    {
+                        _config.UiItem.CurrentLanguage = previousLanguage;
+                        CurrentLanguage = previousLanguage;
+                        NoticeManager.Instance.Enqueue(ResUI.OperationFailed);
+                        return;
+                    }
+
+                    if (MessageBox.Show(Application.Current.MainWindow, ResUI.LanguageRestartPrompt, Global.AppName,
+                        MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK)
+                    {
+                        await AppManager.Instance.RestartAsync();
+                    }
                 }
             });
     }

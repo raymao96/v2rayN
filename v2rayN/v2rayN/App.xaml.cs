@@ -23,6 +23,12 @@ public partial class App
     /// <param name="e"></param>
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (!ProcUtils.WaitForPreviousInstance(e.Args))
+        {
+            Shutdown();
+            return;
+        }
+
         var exePathKey = Utils.GetMd5(Utils.GetExePath());
 
         var rebootas = e.Args.Any(t => t == Global.RebootAs);
