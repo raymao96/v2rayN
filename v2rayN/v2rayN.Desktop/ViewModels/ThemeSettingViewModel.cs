@@ -1,4 +1,5 @@
 using Semi.Avalonia;
+using v2rayN.Desktop.Common;
 
 namespace v2rayN.Desktop.ViewModels;
 
@@ -64,10 +65,20 @@ public partial class ThemeSettingViewModel : MyReactiveObject
             {
                 if (CurrentLanguage.IsNotEmpty() && _config.UiItem.CurrentLanguage != CurrentLanguage)
                 {
+                    var previousLanguage = _config.UiItem.CurrentLanguage;
                     _config.UiItem.CurrentLanguage = CurrentLanguage;
-                    Thread.CurrentThread.CurrentUICulture = new(CurrentLanguage);
-                    await ConfigTextHandler.SaveConfig();
-                    NoticeManager.Instance.Enqueue(ResUI.NeedRebootTips);
+                    if (await ConfigTextHandler.SaveConfig() != 0)
+                    {
+                        _config.UiItem.CurrentLanguage = previousLanguage;
+                        CurrentLanguage = previousLanguage;
+                        NoticeManager.Instance.Enqueue(ResUI.OperationFailed);
+                        return;
+                    }
+
+                    if (await UI.ShowYesNo(ResUI.LanguageRestartPrompt) == ButtonResult.Yes)
+                    {
+                        await AppManager.Instance.RestartAsync();
+                    }
                 }
             });
     }

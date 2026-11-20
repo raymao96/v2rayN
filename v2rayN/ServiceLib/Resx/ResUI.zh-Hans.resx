@@ -1156,7 +1156,13 @@
     <value>自定义 sing-box rule-set</value>
   </data>
   <data name="NeedRebootTips" xml:space="preserve">
-    <value>操作成功。请点击设置菜单重启应用。</value>
+    <value>设置已保存，请退出并重新打开应用。</value>
+  </data>
+  <data name="LanguageRestartPrompt" xml:space="preserve">
+    <value>语言设置已保存。要立即重启应用以应用更改吗？</value>
+  </data>
+  <data name="LanguageRestartFailed" xml:space="preserve">
+    <value>无法重启应用。请退出并重新打开应用，使语言设置生效。</value>
   </data>
   <data name="menuOpenTheFileLocation" xml:space="preserve">
     <value>打开存储所在的位置</value>
