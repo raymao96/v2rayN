@@ -2041,6 +2041,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Tun mode 的本地化字符串。
+        /// </summary>
+        public static string menuTunMode {
+            get {
+                return ResourceManager.GetString("menuTunMode", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   查找类似 Test Configurations UDP Delay 的本地化字符串。
         /// </summary>
         public static string menuUdpTestServer {
@@ -2635,6 +2644,33 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 V4-Blacklist 的本地化字符串。
+        /// </summary>
+        public static string RoutingPresetBlacklist {
+            get {
+                return ResourceManager.GetString("RoutingPresetBlacklist", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 V4-Global 的本地化字符串。
+        /// </summary>
+        public static string RoutingPresetGlobal {
+            get {
+                return ResourceManager.GetString("RoutingPresetGlobal", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 V4-Bypass China (Whitelist) 的本地化字符串。
+        /// </summary>
+        public static string RoutingPresetWhitelist {
+            get {
+                return ResourceManager.GetString("RoutingPresetWhitelist", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   查找类似 {0}, one of the required fields. 的本地化字符串。
         /// </summary>
         public static string RoutingRuleDetailRequiredTips {
@@ -3132,6 +3168,15 @@ namespace ServiceLib.Resx {
             }
         }
         
+        /// <summary>
+        ///   查找类似 Disable Tun 的本地化字符串。
+        /// </summary>
+        public static string TbDisableTun {
+            get {
+                return ResourceManager.GetString("TbDisableTun", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   查找类似 Display GUI 的本地化字符串。
         /// </summary>

@@ -1164,6 +1164,12 @@
   <data name="LanguageRestartFailed" xml:space="preserve">
     <value>无法重启应用。请退出并重新打开应用，使语言设置生效。</value>
   </data>
+  <data name="menuTunMode" xml:space="preserve">
+    <value>Tun 模式</value>
+  </data>
+  <data name="TbDisableTun" xml:space="preserve">
+    <value>关闭 Tun</value>
+  </data>
   <data name="menuOpenTheFileLocation" xml:space="preserve">
     <value>打开存储所在的位置</value>
   </data>
@@ -1974,5 +1980,14 @@
   </data>
   <data name="TbSpeedtestSettings" xml:space="preserve">
     <value>测速设置</value>
+  </data>
+  <data name="RoutingPresetBlacklist" xml:space="preserve">
+    <value>V4-黑名单 (Blacklist)</value>
+  </data>
+  <data name="RoutingPresetGlobal" xml:space="preserve">
+    <value>V4-全局 (Global)</value>
+  </data>
+  <data name="RoutingPresetWhitelist" xml:space="preserve">
+    <value>V4-绕过大陆 (Whitelist)</value>
   </data>
 </root>
