@@ -46,6 +46,63 @@ public static class ProcUtils
         return null;
     }
 
+    private const string RestartAfter = "--restart-after";
+
+    public static bool StartReplacement()
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo(Utils.GetExePath())
+            {
+                UseShellExecute = false,
+                WorkingDirectory = Environment.CurrentDirectory,
+            };
+            if (Path.GetFileNameWithoutExtension(startInfo.FileName).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
+            {
+                startInfo.ArgumentList.Add(Environment.GetCommandLineArgs()[0]);
+            }
+            startInfo.ArgumentList.Add(RestartAfter);
+            startInfo.ArgumentList.Add(Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            using var process = Process.Start(startInfo);
+            return process != null;
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(_tag, ex);
+            return false;
+        }
+    }
+
+    public static bool WaitForPreviousInstance(string[] args)
+    {
+        if (args.Length == 0 || args[0] != RestartAfter)
+        {
+            return true;
+        }
+        if (args.Length != 2 || !int.TryParse(args[1], out var processId)
+            || processId <= 0 || processId == Environment.ProcessId)
+        {
+            return false;
+        }
+
+        try
+        {
+            using var process = Process.GetProcessById(processId);
+            return process.WaitForExit(30_000);
+        }
+        catch (ArgumentException)
+        {
+            // The previous instance already exited.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.SaveLog(_tag, ex);
+            return false;
+        }
+    }
+
     public static bool RebootAsAdmin(bool blAdmin = true)
     {
         try

@@ -1174,7 +1174,13 @@
     <value>Customize the rule-set of sing-box</value>
   </data>
   <data name="NeedRebootTips" xml:space="preserve">
-    <value>Successful operation. Click the settings menu to reboot the app.</value>
+    <value>Settings saved. Please exit and reopen the application.</value>
+  </data>
+  <data name="LanguageRestartPrompt" xml:space="preserve">
+    <value>The language setting has been saved. Restart the application now to apply it?</value>
+  </data>
+  <data name="LanguageRestartFailed" xml:space="preserve">
+    <value>Could not restart the application. Please exit and reopen it to apply the language setting.</value>
   </data>
   <data name="menuOpenTheFileLocation" xml:space="preserve">
     <value>Open the storage location</value>

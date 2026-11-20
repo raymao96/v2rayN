@@ -409,6 +409,24 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 Could not restart the application. Please exit and reopen it to apply the language setting. 的本地化字符串。
+        /// </summary>
+        public static string LanguageRestartFailed {
+            get {
+                return ResourceManager.GetString("LanguageRestartFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 The language setting has been saved. Restart the application now to apply it? 的本地化字符串。
+        /// </summary>
+        public static string LanguageRestartPrompt {
+            get {
+                return ResourceManager.GetString("LanguageRestartPrompt", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   查找类似 Invalid backup file 的本地化字符串。
         /// </summary>
         public static string LocalRestoreInvalidZipTips {
