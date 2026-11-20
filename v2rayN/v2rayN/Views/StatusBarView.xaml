@@ -86,11 +86,11 @@
 
                     <ComboBox
                         x:Name="cmbRoutings2"
-                        Width="160"
+                        Width="200"
                         Margin="{StaticResource MarginLeftRight8}"
                         materialDesign:HintAssist.Hint="{x:Static resx:ResUI.menuRouting}"
                         AutomationProperties.Name="{x:Static resx:ResUI.menuRouting}"
-                        DisplayMemberPath="Remarks"
+                        DisplayMemberPath="DisplayRemarks"
                         FontSize="{DynamicResource StdFontSize}"
                         Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
                 </StackPanel>
@@ -109,65 +109,190 @@
             NoLeftClickDelay="True"
             ToolTipText="v2rayN">
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Style="{StaticResource DefContextMenu}">
+                <ContextMenu materialDesign:MenuAssist.MenuItemsPresenterMargin="4,14,4,12" Style="{StaticResource DefContextMenu}">
+                    <ContextMenu.Resources>
+                        <Style BasedOn="{StaticResource MaterialDesignMenuItem}" TargetType="{x:Type MenuItem}">
+                            <Setter Property="Padding" Value="12,0" />
+                        </Style>
+                        <Style x:Key="TraySelectorRow" TargetType="MenuItem">
+                            <Setter Property="Height" Value="40" />
+                            <Setter Property="StaysOpenOnClick" Value="True" />
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <ContentPresenter Margin="2,0" ContentSource="Header" />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                        <Style x:Key="TraySelector" TargetType="ComboBox">
+                            <Setter Property="UseLayoutRounding" Value="True" />
+                            <Setter Property="MinWidth" Value="178" />
+                            <Setter Property="FontSize" Value="{DynamicResource StdFontSize}" />
+                            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+                            <Setter Property="ItemContainerStyle">
+                                <Setter.Value>
+                                    <Style TargetType="ComboBoxItem">
+                                        <Setter Property="Height" Value="{StaticResource MenuItemHeight}" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ComboBoxItem">
+                                                    <Grid Background="Transparent">
+                                                        <Border x:Name="Highlight" Background="{DynamicResource MaterialDesign.Brush.Foreground}" Opacity="0" />
+                                                        <ContentPresenter Margin="10,0,24,0" VerticalAlignment="Center" />
+                                                        <Path
+                                                            x:Name="Check"
+                                                            Margin="0,0,8,0"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center"
+                                                            Data="M 0,3 L 3,6 L 8,0"
+                                                            Stroke="{TemplateBinding Foreground}"
+                                                            Visibility="Collapsed" />
+                                                    </Grid>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsHighlighted" Value="True">
+                                                            <Setter TargetName="Highlight" Property="Opacity" Value="0.09" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="Highlight" Property="Opacity" Value="0.14" />
+                                                            <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ComboBox">
+                                        <Grid x:Name="SelectorBounds">
+                                            <ToggleButton
+                                                x:Name="RowToggle"
+                                                Background="{TemplateBinding Foreground}"
+                                                ClickMode="Press"
+                                                Focusable="False"
+                                                HorizontalAlignment="Stretch"
+                                                IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                                Opacity="0.1"
+                                                OverridesDefaultStyle="True"
+                                                Style="{x:Null}"
+                                                VerticalAlignment="Stretch">
+                                                <ToggleButton.Template>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border
+                                                            Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding Background}"
+                                                            BorderThickness="0,0,0,0.5"
+                                                            CornerRadius="4" />
+                                                    </ControlTemplate>
+                                                </ToggleButton.Template>
+                                            </ToggleButton>
+                                            <StackPanel
+                                                Margin="10,0,24,0"
+                                                VerticalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                                <TextBlock
+                                                    FontSize="9"
+                                                    Text="{TemplateBinding AutomationProperties.Name}" />
+                                                <ContentPresenter
+                                                    Content="{TemplateBinding SelectionBoxItem}"
+                                                    ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                    ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
+                                            </StackPanel>
+                                            <Path
+                                                Margin="0,5,8,0"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Center"
+                                                Data="M 0,0 L 8,0 L 4,4 Z"
+                                                Fill="{TemplateBinding Foreground}"
+                                                IsHitTestVisible="False"
+                                                Opacity="0.65" />
+                                            <Popup
+                                                x:Name="PART_Popup"
+                                                AllowsTransparency="True"
+                                                IsOpen="{TemplateBinding IsDropDownOpen}"
+                                                Placement="Bottom"
+                                                VerticalOffset="2"
+                                                PlacementTarget="{Binding ElementName=SelectorBounds}"
+                                                PopupAnimation="Fade">
+                                                <Border
+                                                    Width="{Binding ActualWidth, ElementName=SelectorBounds}"
+                                                    Margin="4"
+                                                    MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                                    Background="{DynamicResource MaterialDesign.Brush.Background}"
+                                                    BorderBrush="{DynamicResource MaterialDesign.Brush.Foreground}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4">
+                                                    <Border.Effect>
+                                                        <DropShadowEffect BlurRadius="6" Opacity="0.35" ShadowDepth="1" />
+                                                    </Border.Effect>
+                                                    <Grid>
+                                                        <Border
+                                                            Background="{DynamicResource MaterialDesign.Brush.Primary.Light}"
+                                                            CornerRadius="3"
+                                                            IsHitTestVisible="False"
+                                                            Opacity="0.08" />
+                                                        <ScrollViewer>
+                                                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                                        </ScrollViewer>
+                                                    </Grid>
+                                                </Border>
+                                            </Popup>
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                <Setter TargetName="RowToggle" Property="Opacity" Value="0.18" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ContextMenu.Resources>
                     <MenuItem
-                        x:Name="menuSystemProxyClear"
-                        Height="{StaticResource MenuItemHeight}"
-                        AutomationProperties.Name="{x:Static resx:ResUI.menuSystemProxyClear}">
+                        Style="{StaticResource TraySelectorRow}"
+                        AutomationProperties.Name="{x:Static resx:ResUI.menuSystemproxy}">
                         <MenuItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    x:Name="menuSystemProxyClear2"
-                                    Margin="{StaticResource MarginRight8}"
-                                    VerticalAlignment="Center"
-                                    Kind="Check" />
-                                <TextBlock Text="{x:Static resx:ResUI.menuSystemProxyClear}" />
-                            </StackPanel>
+                            <ComboBox
+                                x:Name="cmbTraySystemProxy"
+                                Margin="0,0,0,1.5"
+                                AutomationProperties.Name="{x:Static resx:ResUI.menuSystemproxy}"
+                                Style="{StaticResource TraySelector}">
+                                <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxyClear}" />
+                                <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxySet}" />
+                                <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxyNothing}" />
+                                <ComboBoxItem Content="{x:Static resx:ResUI.menuSystemProxyPac}" />
+                            </ComboBox>
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem
-                        x:Name="menuSystemProxySet"
-                        Height="{StaticResource MenuItemHeight}"
-                        AutomationProperties.Name="{x:Static resx:ResUI.menuSystemProxySet}">
+                        x:Name="menuRoutings"
+                        Style="{StaticResource TraySelectorRow}"
+                        AutomationProperties.Name="{x:Static resx:ResUI.menuRouting}">
                         <MenuItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    x:Name="menuSystemProxySet2"
-                                    Margin="{StaticResource MarginRight8}"
-                                    VerticalAlignment="Center"
-                                    Kind="Check" />
-                                <TextBlock Text="{x:Static resx:ResUI.menuSystemProxySet}" />
-                            </StackPanel>
+                            <ComboBox
+                                x:Name="cmbRoutings"
+                                Margin="0,1.5"
+                                AutomationProperties.Name="{x:Static resx:ResUI.menuRouting}"
+                                DisplayMemberPath="DisplayRemarks"
+                                Style="{StaticResource TraySelector}" />
                         </MenuItem.Header>
                     </MenuItem>
                     <MenuItem
-                        x:Name="menuSystemProxyNothing"
-                        Height="{StaticResource MenuItemHeight}"
-                        AutomationProperties.Name="{x:Static resx:ResUI.menuSystemProxyNothing}">
+                        Style="{StaticResource TraySelectorRow}"
+                        AutomationProperties.Name="{x:Static resx:ResUI.menuTunMode}">
                         <MenuItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    x:Name="menuSystemProxyNothing2"
-                                    Margin="{StaticResource MarginRight8}"
-                                    VerticalAlignment="Center"
-                                    Kind="Check" />
-                                <TextBlock Text="{x:Static resx:ResUI.menuSystemProxyNothing}" />
-                            </StackPanel>
-                        </MenuItem.Header>
-                    </MenuItem>
-                    <MenuItem
-                        x:Name="menuSystemProxyPac"
-                        Height="{StaticResource MenuItemHeight}"
-                        AutomationProperties.Name="{x:Static resx:ResUI.menuSystemProxyPac}">
-                        <MenuItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon
-                                    x:Name="menuSystemProxyPac2"
-                                    Margin="{StaticResource MarginRight8}"
-                                    VerticalAlignment="Center"
-                                    Kind="Check" />
-                                <TextBlock Text="{x:Static resx:ResUI.menuSystemProxyPac}" />
-                            </StackPanel>
+                            <ComboBox
+                                x:Name="cmbTrayTunMode"
+                                Margin="0,1.5,0,0"
+                                AutomationProperties.Name="{x:Static resx:ResUI.menuTunMode}"
+                                Style="{StaticResource TraySelector}">
+                                <ComboBoxItem Content="{x:Static resx:ResUI.TbEnableTunAs}" />
+                                <ComboBoxItem Content="{x:Static resx:ResUI.TbDisableTun}" />
+                            </ComboBox>
                         </MenuItem.Header>
                     </MenuItem>
                     <Separator />

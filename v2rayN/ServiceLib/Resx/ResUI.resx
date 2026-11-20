@@ -1182,6 +1182,12 @@
   <data name="LanguageRestartFailed" xml:space="preserve">
     <value>Could not restart the application. Please exit and reopen it to apply the language setting.</value>
   </data>
+  <data name="menuTunMode" xml:space="preserve">
+    <value>Tun mode</value>
+  </data>
+  <data name="TbDisableTun" xml:space="preserve">
+    <value>Disable Tun</value>
+  </data>
   <data name="menuOpenTheFileLocation" xml:space="preserve">
     <value>Open the storage location</value>
   </data>
@@ -1988,5 +1994,14 @@ The "Get Certificate" action may fail if a self-signed certificate is used or if
   </data>
   <data name="TbSpeedtestSettings" xml:space="preserve">
     <value>Speedtest Settings</value>
+  </data>
+  <data name="RoutingPresetBlacklist" xml:space="preserve">
+    <value>V4-Blacklist</value>
+  </data>
+  <data name="RoutingPresetGlobal" xml:space="preserve">
+    <value>V4-Global</value>
+  </data>
+  <data name="RoutingPresetWhitelist" xml:space="preserve">
+    <value>V4-Bypass China (Whitelist)</value>
   </data>
 </root>
