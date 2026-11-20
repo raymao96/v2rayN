@@ -67,7 +67,7 @@
                     x:Name="cmbRoutings2"
                     Width="160"
                     Margin="{StaticResource MarginLr8}"
-                    DisplayMemberBinding="{Binding Remarks}"
+                    DisplayMemberBinding="{Binding DisplayRemarks}"
                     ItemsSource="{Binding RoutingItems}"
                     ToolTip.Tip="{x:Static resx:ResUI.menuRouting}" />
             </StackPanel>
