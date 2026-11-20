@@ -146,6 +146,17 @@ public sealed class AppManager
         AppEvents.ShutdownRequested.Publish(byUser);
     }
 
+    public async Task RestartAsync()
+    {
+        if (!ProcUtils.StartReplacement())
+        {
+            NoticeManager.Instance.Enqueue(ResUI.LanguageRestartFailed);
+            return;
+        }
+
+        await AppExitAsync(true);
+    }
+
     public async Task RebootAsAdmin()
     {
         ProcUtils.RebootAsAdmin();

@@ -14,7 +14,7 @@ internal class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        if (OnStartup(args) == false)
+        if (!ProcUtils.WaitForPreviousInstance(args) || !OnStartup(args))
         {
             Environment.Exit(0);
             return;
