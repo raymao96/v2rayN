@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Existing Git tag to publish the installers to (leave blank to build only)'
+        description: 'Version to publish (for example v7.25.6), or blank to build only'
         required: false
         type: string
+      compression_trial:
+        description: 'Build and test an LZMA2 installer archive without publishing a Release'
+        type: boolean
+        default: false
   push:
     branches:
       - master
@@ -52,10 +56,12 @@ jobs:
           dotnet-version: 10.0.1xx
 
       - name: Build and package Windows x64 installers
+        id: installer
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
+          COMPRESSION_TRIAL: ${{ inputs.compression_trial }}
           DOTNET_CLI_TELEMETRY_OPTOUT: '1'
           DOTNET_NOLOGO: '1'
         run: |
@@ -64,12 +70,40 @@ jobs:
             Arch = 'x64'
             Flavor = 'all'
           }
+          $region = $env:GITHUB_REF_NAME
+          $regional = $region -in @('tw', 'cn')
+          if ($env:COMPRESSION_TRIAL -eq 'true') {
+            if ($env:RELEASE_TAG) {
+              throw 'Leave release_tag blank for the compression trial.'
+            }
+            if ($region -match '^codex/(tw|cn)-') {
+              $region = $Matches[1]
+              $regional = $true
+            }
+            if (-not $regional) {
+              throw 'Run the compression trial on tw, cn, or a matching codex/tw-* or codex/cn-* branch.'
+            }
+            $options.StoreInstallerPayload = $true
+          }
           if ($env:RELEASE_TAG) {
             $version = $env:RELEASE_TAG -replace '^v', ''
             if ($version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
               throw 'release_tag must be a numeric version tag (for example v7.25.6).'
             }
             $options.Version = $version
+          }
+          if ($regional) {
+            $sourceVersion = ([xml](Get-Content -Raw v2rayN/Directory.Build.props)).Project.PropertyGroup.Version |
+              Where-Object { $_ }
+            if ($sourceVersion -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+              throw 'Invalid version in Directory.Build.props.'
+            }
+            if ($env:RELEASE_TAG -and $version -ne $sourceVersion) {
+              throw "Expected release_tag v$sourceVersion for the version being built."
+            }
+            $options.Version = $sourceVersion
+            $options.CabinetCompression = 'high'
+            "package_base=v2rayN_v${sourceVersion}_x64_zh${region}" >> $env:GITHUB_OUTPUT
           }
           $scriptPath = Join-Path $env:GITHUB_WORKSPACE 'package-windows.ps1'
           if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) {
@@ -78,48 +112,110 @@ jobs:
           & $scriptPath @options
           if (-not $?) { throw 'v2rayN installer packaging failed.' }
 
-      - name: Verify Windows x64 installers
+      - name: Verify and archive Windows x64 installers
         shell: pwsh
+        env:
+          PACKAGE_BASE: ${{ steps.installer.outputs.package_base }}
+          COMPRESSION_TRIAL: ${{ inputs.compression_trial }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $expected = @('v2rayN-windows-64.exe', 'v2rayN-windows-64-desktop.exe')
-          $all = @(Get-ChildItem -LiteralPath dist -File -Filter 'v2rayN-windows-*.exe')
-          if ($all.Count -ne $expected.Count) {
-            throw "Expected $($expected.Count) installers, found $($all.Count)."
+          Set-Location dist
+          $installers = [ordered]@{
+            'v2rayN-windows-64.exe' = $env:PACKAGE_BASE
+            'v2rayN-windows-64-desktop.exe' = "${env:PACKAGE_BASE}_desktop"
           }
-          foreach ($pattern in $expected) {
-            $files = @(Get-ChildItem -LiteralPath dist -File -Filter $pattern)
-            if ($files.Count -ne 1) {
-              throw "Expected one installer for $pattern, found $($files.Count)."
+          $built = @(Get-ChildItem -File -Filter 'v2rayN-windows-*.exe')
+          if ($built.Count -ne $installers.Count) {
+            throw "Expected $($installers.Count) installers, found $($built.Count)."
+          }
+          if ($env:PACKAGE_BASE) {
+            $sevenZip = Join-Path $env:ProgramFiles '7-Zip/7z.exe'
+            if (-not (Test-Path -LiteralPath $sevenZip -PathType Leaf)) {
+              $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
             }
-            if ($files[0].Length -le 0) {
-              throw "Empty installer: $($files[0].FullName)"
+          }
+          foreach ($name in $installers.Keys) {
+            $installer = Get-Item -LiteralPath $name
+            if ($installer.Length -le 0) {
+              throw "Empty installer: $name"
             }
-            Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256 | Format-List
+            if ($env:PACKAGE_BASE) {
+              $baseName = $installers[$name]
+              $setupName = "${baseName}_setup.exe"
+              $archiveName = "$baseName.7z"
+              Rename-Item -LiteralPath $name -NewName $setupName
+              $compression = @('-m0=LZMA2:d=64m:fb=64')
+              if ($env:COMPRESSION_TRIAL -eq 'true') {
+                $compression = @('-m0=LZMA2:d=128m:fb=273', '-mf=off')
+              }
+              & $sevenZip a -t7z -mx=9 @compression -mmt=2 $archiveName $setupName
+              if ($LASTEXITCODE -ne 0) { throw "7-Zip could not create $archiveName." }
+              & $sevenZip t $archiveName
+              if ($LASTEXITCODE -ne 0) { throw "7-Zip integrity check failed for $archiveName." }
+              $archiveBytes = (Get-Item -LiteralPath $archiveName).Length
+              $installer = Get-Item -LiteralPath $setupName
+              "$archiveName — $archiveBytes bytes (setup.exe: $($installer.Length) bytes)" >> $env:GITHUB_STEP_SUMMARY
+            }
+            Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256 | Format-List
           }
 
       - name: Upload Windows x64 installers
         uses: actions/upload-artifact@v7
         with:
           name: release-windows-installers
-          path: dist/v2rayN-windows-*.exe
+          path: |
+            ${{ !inputs.compression_trial && 'dist/v2rayN*.exe' || '' }}
+            dist/v2rayN*.7z
           if-no-files-found: error
           compression-level: 0
           overwrite: true
 
+      - name: Test extracted WPF installer
+        if: inputs.compression_trial
+        shell: pwsh
+        env:
+          PACKAGE_BASE: ${{ steps.installer.outputs.package_base }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sevenZip = Join-Path $env:ProgramFiles '7-Zip/7z.exe'
+          if (-not (Test-Path -LiteralPath $sevenZip -PathType Leaf)) {
+            $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
+          }
+          $extracted = Join-Path $env:RUNNER_TEMP 'v2rayN-installer-smoke'
+          $setupName = "${env:PACKAGE_BASE}_setup.exe"
+          & $sevenZip x "-o$extracted" "dist/$env:PACKAGE_BASE.7z"
+          if ($LASTEXITCODE -ne 0) { throw 'Could not extract WPF installer.' }
+          $setup = Join-Path $extracted $setupName
+          $originalHash = (Get-FileHash -LiteralPath "dist/$setupName").Hash
+          if ((Get-FileHash -LiteralPath $setup).Hash -ne $originalHash) {
+            throw 'Extracted installer does not match the built EXE.'
+          }
+          $installDir = Join-Path $env:ProgramFiles 'v2rayN'
+          $app = Join-Path $installDir 'v2rayN.exe'
+          $install = Start-Process -FilePath $setup -ArgumentList '/quiet', '/norestart' -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Install failed: $($install.ExitCode)" }
+          try {
+            foreach ($relativePath in @('v2rayN.exe', 'bin/xray/xray.exe', 'bin/sing_box/sing-box.exe')) {
+              if (-not (Test-Path -LiteralPath (Join-Path $installDir $relativePath) -PathType Leaf)) {
+                throw "Missing installed file: $relativePath"
+              }
+            }
+          } finally {
+            $uninstall = Start-Process -FilePath $setup -ArgumentList '/uninstall', '/quiet', '/norestart' -Wait -PassThru
+            if ($uninstall.ExitCode -ne 0 -or (Test-Path -LiteralPath $app)) {
+              throw "Uninstall failed: $($uninstall.ExitCode)"
+            }
+          }
+
   release:
-    name: sign and upload windows x64 ${{ matrix.flavor }}
-    if: inputs.release_tag != ''
+    name: sign and upload Windows x64 installers
+    if: inputs.release_tag != '' && !inputs.compression_trial
     needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        flavor: [wpf, desktop]
     uses: ./.github/workflows/upload-sign.yml
     with:
       release_tag: ${{ inputs.release_tag }}
       desktop_release: true
       artifact_name: release-windows-installers
-      file_pattern: "v2rayN-windows-64${{ matrix.flavor == 'desktop' && '-desktop' || '' }}.exe"
+      file_pattern: 'v2rayN*[ez]'
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}

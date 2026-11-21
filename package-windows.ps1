@@ -8,7 +8,10 @@ param(
     [string]$WixVersion = '7.0.1',
     [string]$Output = 'dist',
     [string]$XrayRef,
-    [string]$SingBoxRef
+    [string]$SingBoxRef,
+    [ValidateSet('medium', 'high')]
+    [string]$CabinetCompression = 'medium',
+    [switch]$StoreInstallerPayload
 )
 
 Set-StrictMode -Version Latest
@@ -243,6 +246,8 @@ if ($LASTEXITCODE -ne 0 -or -not ($sdk -match '^10\.')) { throw '.NET 10 SDK is 
 $runtimes = @(& dotnet --list-runtimes)
 if ($LASTEXITCODE -ne 0 -or -not ($runtimes -match '^Microsoft\.NETCore\.App 8\.')) { throw 'WiX 7 requires the .NET 8 runtime on the build machine.' }
 if ($Arch -eq 'i386') { $Arch = 'x86' }
+$msiCompression = if ($StoreInstallerPayload) { 'none' } else { $CabinetCompression }
+$bundleCompression = @(if ($StoreInstallerPayload) { '-dcl'; 'none' })
 $arches = if ($Arch -eq 'all') { @('x64','x86','arm64') } else { @($Arch) }
 $flavors = if ($Flavor -eq 'all') { @('wpf','desktop') } else { @($Flavor) }
 $archMap = @{
@@ -688,7 +693,7 @@ try {
             $msiSource = Join-Path $work "$flavor-$arch.wxs"
             [System.IO.File]::WriteAllText($msiSource, $msiText, [System.Text.UTF8Encoding]::new($false))
             $script:Stage = "Building $flavor $arch MSI"
-            Run $wix @('build',$msiSource,'-arch',$map.Wix,'-ext','WixToolset.Util.wixext','-o',$templateVars.MSI)
+            Run $wix @('build',$msiSource,'-arch',$map.Wix,'-dcl',$msiCompression,'-ext','WixToolset.Util.wixext','-o',$templateVars.MSI)
             $bundleText = @'
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
@@ -725,7 +730,7 @@ try {
             $fileName = "v2rayN-windows-$archSuffix$desktopSuffix.exe"
             $setup = Join-Path $dist $fileName
             $script:Stage = "Building $flavor $arch native EXE installer"
-            Run $wix @('build',$bundleSource,'-arch',$map.Wix,'-ext','WixToolset.Util.wixext','-ext','WixToolset.BootstrapperApplications.wixext','-o',$setup)
+            Run $wix (@('build',$bundleSource,'-arch',$map.Wix,'-ext','WixToolset.Util.wixext','-ext','WixToolset.BootstrapperApplications.wixext','-o',$setup) + $bundleCompression)
             Assert-Machine $setup $map.Machine
             Write-Host "Created: $setup"
         }
