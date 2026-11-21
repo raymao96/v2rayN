@@ -504,6 +504,7 @@ foreach ($mapping in $localeMappings.GetEnumerator()) {
 $localePayloadXml = $localizedPayloads -join "`n"
 $localizationFile = $localFiles['en-US']
 $msiLanguage = '1033'
+$msiCodepage = '1252'
 $msiStrings = @{
     DOWNGRADE_ERROR = 'A newer version of v2rayN is installed.'
     CLOSE_APP_PROMPT = 'Save your changes and close v2rayN before continuing.'
@@ -518,6 +519,7 @@ if ($InstallerCulture) {
         throw "Unexpected installer culture in $localizationFile"
     }
     $msiLanguage = $localization.Root.Attribute('Language').Value
+    $msiCodepage = @{ 'zh-TW' = '950'; 'zh-CN' = '936' }[$InstallerCulture]
     $localizedStrings = @{}
     foreach ($entry in $localization.Root.Elements()) {
         $localizedStrings.Add($entry.Attribute('Id').Value, $entry.Attribute('Value').Value)
@@ -641,6 +643,7 @@ try {
                 'THEME' = Escape-Xml $themePath
                 'LOCALIZATION' = Escape-Xml $localizationFile
                 'MSI_LANGUAGE' = Escape-Xml $msiLanguage
+                'MSI_CODEPAGE' = Escape-Xml $msiCodepage
                 'LOCALPAYLOADS' = $localePayloadXml
             }
             foreach ($entry in $msiStrings.GetEnumerator()) {
@@ -649,7 +652,7 @@ try {
             $msiText = @'
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
-  <Package Name="{{NAME}}" Manufacturer="2dust" Version="{{VERSION}}" UpgradeCode="{{MSIGUID}}" Scope="perMachine" InstallerVersion="500" Language="{{MSI_LANGUAGE}}">
+  <Package Name="{{NAME}}" Manufacturer="2dust" Version="{{VERSION}}" UpgradeCode="{{MSIGUID}}" Scope="perMachine" InstallerVersion="500" Language="{{MSI_LANGUAGE}}" Codepage="{{MSI_CODEPAGE}}">
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="{{DOWNGRADE_ERROR}}" />
     <util:CloseApplication Id="CloseV2rayN" Target="v2rayN.exe" CloseMessage="yes" PromptToContinue="yes" Description="{{CLOSE_APP_PROMPT}}" Timeout="20" RebootPrompt="yes" />
