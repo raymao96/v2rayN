@@ -9,9 +9,12 @@
   <String Id="InstallHeader" Value="安裝 v2rayN" />
   <String Id="InstallMessage" Value="選擇「安裝」以繼續。" />
   <String Id="VersionText" Value="版本 v[WixBundleVersion]" />
+  <String Id="InstalledVersion" Value="已安裝版本 v[RelatedInstalledVersion]" />
+  <String Id="InstallerCacheMissing" Value="找不到已安裝版本的安裝程式，請使用原安裝程式進行維護。" />
   <String Id="UpgradeFolder" Value="更新時會沿用原本的安裝資料夾。" />
   <String Id="Options" Value="選項" />
   <String Id="Install" Value="安裝" />
+  <String Id="Upgrade" Value="更新" />
   <String Id="OptionsHeader" Value="安裝選項" />
   <String Id="InstallLocation" Value="安裝位置" />
   <String Id="Browse" Value="瀏覽…" />

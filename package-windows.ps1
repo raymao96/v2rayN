@@ -281,6 +281,13 @@ $dist = if ([System.IO.Path]::IsPathRooted($Output)) { $Output } else { Join-Pat
 New-Item -ItemType Directory -Force -Path $work, $dist | Out-Null
 $wixDir = Join-Path $work 'wix-tools'
 $wix = Join-Path $wixDir 'wix.exe'
+$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+if (-not (Test-Path -LiteralPath $vswhere -PathType Leaf)) {
+    throw 'Visual Studio C++ Build Tools are required to build the installer maintenance extension.'
+}
+$msbuild = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find 'MSBuild\Current\Bin\MSBuild.exe' |
+    Select-Object -First 1
+if (-not $msbuild) { throw 'MSBuild with Visual Studio C++ Build Tools was not found.' }
 $script:Stage = 'Installing WiX toolset'
 if (Test-Path $wix) {
     $versions = @(& dotnet tool list --tool-path $wixDir)
@@ -320,14 +327,24 @@ $themeTemplate = @'
       </Button>
     </Page>
     <Page Name="Install">
-      <Label X="32" Y="141" Width="-32" Height="46" FontId="1">#(loc.InstallHeader)</Label>
-      <Label X="32" Y="201" Width="-32" Height="65" FontId="4">#(loc.InstallMessage)</Label>
+      <Label X="32" Y="141" Width="-32" Height="46" FontId="1">
+        <Text>#(loc.InstallHeader)</Text><Text Condition="RelatedInstallDetected">#(loc.ModifyHeader)</Text>
+      </Label>
+      <Label X="32" Y="201" Width="-32" Height="42" FontId="4">
+        <Text>#(loc.InstallMessage)</Text><Text Condition="RelatedInstallDetected">#(loc.ModifyMessage)</Text>
+      </Label>
+      <Label X="32" Y="245" Width="-32" Height="25" FontId="2" VisibleCondition="RelatedInstallDetected">#(loc.InstalledVersion)</Label>
       <Label Name="InstallVersion" X="32" Y="274" Width="-32" Height="28" FontId="2" VisibleCondition="WixStdBAShowVersion">#(loc.VersionText)</Label>
-      <Label X="32" Y="307" Width="-32" Height="44" FontId="2" VisibleCondition="PreviousInstallFolder">#(loc.UpgradeFolder)</Label>
-      <Button Name="OptionsButton" X="32" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="NOT PreviousInstallFolder">
+      <Label X="32" Y="307" Width="-32" Height="44" FontId="2" VisibleCondition="RelatedInstallDetected AND NOT RelatedInstallerAvailable">#(loc.InstallerCacheMissing)</Label>
+      <Label X="32" Y="307" Width="-32" Height="44" FontId="2" VisibleCondition="PreviousInstallFolder AND (NOT RelatedInstallDetected OR RelatedInstallerAvailable AND RelatedUpgradeAvailable)">#(loc.UpgradeFolder)</Label>
+      <Button Name="OptionsButton" X="32" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="NOT PreviousInstallFolder AND NOT RelatedInstallDetected">
         <Text>#(loc.Options)</Text><ChangePageAction Page="Options" />
       </Button>
-      <Button Name="InstallButton" X="-158" Y="-28" Width="120" Height="36" TabStop="yes" FontId="0" ElevationShieldCondition='(WixBundleAuthoredScope = 1 AND NOT WixBundleElevated) OR ((WixBundleAuthoredScope = 2 OR WixBundleAuthoredScope = 3) AND WixStdBAScope = "PerMachine")'>#(loc.Install)</Button>
+      <Button Name="RelatedRepairButton" X="32" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="RelatedInstallerAvailable" ElevationShieldCondition="NOT WixBundleElevated">#(loc.Repair)</Button>
+      <Button Name="RelatedUninstallButton" X="174" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="RelatedInstallerAvailable" ElevationShieldCondition="NOT WixBundleElevated">#(loc.Uninstall)</Button>
+      <Button Name="InstallButton" X="-158" Y="-28" Width="120" Height="36" TabStop="yes" FontId="0" VisibleCondition="NOT RelatedInstallDetected OR RelatedUpgradeAvailable" ElevationShieldCondition='(WixBundleAuthoredScope = 1 AND NOT WixBundleElevated) OR ((WixBundleAuthoredScope = 2 OR WixBundleAuthoredScope = 3) AND WixStdBAScope = "PerMachine")'>
+        <Text>#(loc.Install)</Text><Text Condition="RelatedUpgradeAvailable">#(loc.Upgrade)</Text>
+      </Button>
       <Button Name="InstallCancelButton" X="-30" Y="-28" Width="110" Height="36" TabStop="yes" FontId="0">
         <Text>#(loc.Close)</Text><CloseWindowAction />
       </Button>
@@ -415,9 +432,12 @@ $themeTranslations = [ordered]@{
     InstallHeader = @('Ready to install', '准备安装', '準備安裝', 'Prêt à installer')
     InstallMessage = @('Proxy management for Windows.', 'Windows 代理管理工具。', 'Windows 代理管理工具。', 'Gestion de proxy pour Windows.')
     VersionText = @('Version [WixBundleVersion]', '版本 [WixBundleVersion]', '版本 [WixBundleVersion]', 'Version [WixBundleVersion]')
+    InstalledVersion = @('Installed version [RelatedInstalledVersion]', '已安装版本 [RelatedInstalledVersion]', '已安裝版本 [RelatedInstalledVersion]', 'Version installée [RelatedInstalledVersion]')
+    InstallerCacheMissing = @('The installed setup file is missing. Use the original installer to perform maintenance.', '找不到已安装版本的安装程序，请使用原安装程序进行维护。', '找不到已安裝版本的安裝程式，請使用原安裝程式進行維護。', 'Le programme d''installation est introuvable. Utilisez le programme d''installation d''origine.')
     UpgradeFolder = @('The existing installation folder will be kept during the update.', '更新时将保留现有安装目录。', '更新時將保留現有安裝目錄。', 'Le dossier d''installation actuel sera conservé pendant la mise à jour.')
     Options = @('Options', '选项', '選項', 'Options')
     Install = @('Install', '安装', '安裝', 'Installer')
+    Upgrade = @('Update', '更新', '更新', 'Mettre à jour')
     OptionsHeader = @('Installation options', '安装选项', '安裝選項', 'Options d''installation')
     InstallLocation = @('Install location', '安装位置', '安裝位置', 'Dossier d''installation')
     Browse = @('Browse…', '浏览…', '瀏覽…', 'Parcourir…')
@@ -562,6 +582,15 @@ try {
     Set-Location $root
     foreach ($arch in $arches) {
         $map = $archMap[$arch]
+        $script:Stage = "Building $arch installer maintenance extension"
+        $platform = @{ x64 = 'x64'; x86 = 'Win32'; arm64 = 'ARM64' }[$arch]
+        $maintenanceDir = Join-Path $work "maintenance-$arch"
+        $maintenanceProject = Join-Path $root 'installer/maintenance/Maintenance.vcxproj'
+        Run $msbuild @($maintenanceProject, '/restore', '/p:Configuration=Release', "/p:Platform=$platform",
+            "/p:WixVersion=$WixVersion", "/p:OutDir=$maintenanceDir/", "/p:IntDir=$maintenanceDir/obj/",
+            "/p:MSBuildProjectExtensionsPath=$maintenanceDir/obj/")
+        $maintenanceDll = Join-Path $maintenanceDir 'Maintenance.dll'
+        Assert-Machine $maintenanceDll $map.Machine
         $binSource = Join-Path $work "core-$arch"
         $script:Stage = "Downloading $arch native Xray-core and sing-box from upstream GitHub Releases"
         if (Test-Path -LiteralPath $binSource) { Remove-Item -LiteralPath $binSource -Recurse -Force }
@@ -646,6 +675,7 @@ try {
                 'DIRS' = $graph.Directories
                 'FILES' = $graph.Components
                 'THEME' = Escape-Xml $themePath
+                'MAINTENANCE' = Escape-Xml $maintenanceDll
                 'LOCALIZATION' = Escape-Xml $localizationFile
                 'MSI_LANGUAGE' = Escape-Xml $msiLanguage
                 'MSI_CODEPAGE' = Escape-Xml $msiCodepage
@@ -745,6 +775,10 @@ try {
     <Variable Name="InstallFolder" Type="formatted" Value="[{{BURN_PROGRAMFILES}}]{{DIRNAME}}" />
     <Variable Name="CreateDesktopShortcut" Type="numeric" Value="1" />
     <Variable Name="CreateStartMenuShortcut" Type="numeric" Value="1" />
+    <Variable Name="RelatedInstallDetected" Type="numeric" Value="0" />
+    <Variable Name="RelatedInstallerAvailable" Type="numeric" Value="0" />
+    <Variable Name="RelatedUpgradeAvailable" Type="numeric" Value="0" />
+    <Variable Name="RelatedInstalledVersion" Type="string" />
     <util:RegistrySearch Id="GetInstallFolder" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="InstallDir" Variable="PreviousInstallFolder" Result="value" />
     <util:RegistrySearch Id="GetDesktop" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="DesktopEnabled" Variable="PreviousDesktopEnabled" Result="value" />
     <util:RegistrySearch Id="GetStart" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="StartMenuEnabled" Variable="PreviousStartMenuEnabled" Result="value" />
@@ -753,6 +787,7 @@ try {
     <SetVariable Id="RestoreStart" Variable="CreateStartMenuShortcut" Type="numeric" Value="[PreviousStartMenuEnabled]" Condition='PreviousStartMenuEnabled = "0" OR PreviousStartMenuEnabled = "1"' After="GetStart" />
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication Theme="hyperlinkLargeLicense" ThemeFile="{{THEME}}" LocalizationFile="{{LOCALIZATION}}" LogoFile="{{LOGO}}" LicenseUrl="" ShowVersion="yes" LaunchTarget="[InstallFolder]\v2rayN.exe" SuppressRepair="no" SuppressOptionsUI="no" />
+      <Payload SourceFile="{{MAINTENANCE}}" bal:BAFunctions="yes" />
 {{LOCALPAYLOADS}}
     </BootstrapperApplication>
     <Chain>

@@ -11,6 +11,9 @@ on:
         description: 'Build and test the WPF LZMA2 installer archive without publishing a Release'
         type: boolean
         default: false
+      maintenance_baseline_run:
+        description: 'Optional Actions run ID containing the previous WPF trial archive'
+        type: string
   push:
     branches:
       - master
@@ -25,6 +28,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: read
+      actions: read
     timeout-minutes: 360
 
     steps:
@@ -219,6 +223,37 @@ jobs:
               throw "Uninstall failed: $($uninstall.ExitCode)"
             }
           }
+
+      - name: Download previous WPF trial archive
+        if: inputs.compression_trial && inputs.maintenance_baseline_run != ''
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.maintenance_baseline_run }}
+          pattern: 'v2rayN_*_x64_zh??.7z'
+          merge-multiple: true
+          path: ${{ runner.temp }}/v2rayN-maintenance-baseline
+
+      - name: Test maintenance with a previous WPF bundle
+        if: inputs.compression_trial && inputs.maintenance_baseline_run != ''
+        shell: pwsh
+        env:
+          PACKAGE_BASE: ${{ steps.installer.outputs.package_base }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $baseline = Join-Path $env:RUNNER_TEMP 'v2rayN-maintenance-baseline'
+          $archive = @(Get-ChildItem -LiteralPath $baseline -Filter '*.7z' -File)
+          if ($archive.Count -ne 1) { throw 'Expected exactly one previous WPF trial archive.' }
+          $sevenZip = Join-Path $env:ProgramFiles '7-Zip/7z.exe'
+          if (-not (Test-Path -LiteralPath $sevenZip -PathType Leaf)) {
+            $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
+          }
+          & $sevenZip x "-o$baseline" $archive[0].FullName
+          if ($LASTEXITCODE -ne 0) { throw 'Could not extract the previous WPF installer.' }
+          $previous = @(Get-ChildItem -LiteralPath $baseline -Filter '*_setup.exe' -File)
+          if ($previous.Count -ne 1) { throw 'Expected exactly one previous WPF installer.' }
+          $current = Join-Path $env:RUNNER_TEMP "v2rayN-installer-smoke/${env:PACKAGE_BASE}_setup.exe"
+          & ./installer/maintenance/Test-Maintenance.ps1 -PreviousSetup $previous[0].FullName -CurrentSetup $current
 
   release:
     name: sign and upload Windows x64 installers
