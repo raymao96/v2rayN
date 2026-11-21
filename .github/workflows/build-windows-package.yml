@@ -7,9 +7,6 @@ on:
         description: 'Existing Git tag to publish the installers to (leave blank to build only)'
         required: false
         type: string
-  push:
-    branches:
-      - master
 
 permissions:
   contents: write
@@ -22,6 +19,8 @@ jobs:
     permissions:
       contents: read
     timeout-minutes: 360
+    outputs:
+      version: ${{ steps.installer.outputs.version }}
 
     steps:
       - name: Checkout source
@@ -51,7 +50,8 @@ jobs:
         with:
           dotnet-version: 10.0.1xx
 
-      - name: Build and package Windows x64 installers
+      - name: Build and package Windows x64 WPF installer
+      id: installer
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -60,17 +60,28 @@ jobs:
           DOTNET_NOLOGO: '1'
         run: |
           $ErrorActionPreference = 'Stop'
+          $ref = $env:GITHUB_REF_NAME
+          if ($ref -notmatch '^(?:codex/)?(tw|cn)(?:$|-)') {
+            throw "Expected a TW or CN build ref, got $ref."
+          }
+          $edition = $Matches[1]
+          $culture = @{ tw = 'zh-TW'; cn = 'zh-CN' }[$edition]
+          $version = ([xml](Get-Content -Raw v2rayN/Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ }
+          if ($version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+            throw 'Invalid application version in Directory.Build.props.'
+          }
+          if ($env:RELEASE_TAG -and ($ref -ne $edition -or ($env:RELEASE_TAG -replace '^v', '') -ne $version)) {
+            throw "Release $env:RELEASE_TAG must match application version v$version on branch $edition."
+          }
           $options = @{
             Arch = 'x64'
-            Flavor = 'all'
+            Flavor = 'wpf'
+            Version = $version
+            InstallerCulture = $culture
           }
-          if ($env:RELEASE_TAG) {
-            $version = $env:RELEASE_TAG -replace '^v', ''
-            if ($version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
-              throw 'release_tag must be a numeric version tag (for example v7.25.6).'
-            }
-            $options.Version = $version
-          }
+          "path=dist/v2rayN-windows-64-v$version.exe" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Building $culture v$version from $(git rev-parse HEAD)"
           $scriptPath = Join-Path $env:GITHUB_WORKSPACE 'package-windows.ps1'
           if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) {
             throw "Packaging script not found: $scriptPath"
@@ -78,48 +89,37 @@ jobs:
           & $scriptPath @options
           if (-not $?) { throw 'v2rayN installer packaging failed.' }
 
-      - name: Verify Windows x64 installers
+      - name: Verify Windows x64 WPF installer
         shell: pwsh
+        env:
+          INSTALLER_PATH: ${{ steps.installer.outputs.path }}
+          INSTALLER_VERSION: ${{ steps.installer.outputs.version }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $expected = @('v2rayN-windows-64.exe', 'v2rayN-windows-64-desktop.exe')
-          $all = @(Get-ChildItem -LiteralPath dist -File -Filter 'v2rayN-windows-*.exe')
-          if ($all.Count -ne $expected.Count) {
-            throw "Expected $($expected.Count) installers, found $($all.Count)."
+          $installer = Get-Item -LiteralPath $env:INSTALLER_PATH
+          if ($installer.Length -le 0 -or $installer.VersionInfo.ProductVersion -ne $env:INSTALLER_VERSION) {
+            throw "Unexpected product version or empty installer: $($installer.FullName)"
           }
-          foreach ($pattern in $expected) {
-            $files = @(Get-ChildItem -LiteralPath dist -File -Filter $pattern)
-            if ($files.Count -ne 1) {
-              throw "Expected one installer for $pattern, found $($files.Count)."
-            }
-            if ($files[0].Length -le 0) {
-              throw "Empty installer: $($files[0].FullName)"
-            }
-            Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256 | Format-List
-          }
+          Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256 | Format-List
 
       - name: Upload Windows x64 installers
         uses: actions/upload-artifact@v7
         with:
           name: release-windows-installers
-          path: dist/v2rayN-windows-*.exe
+          path: ${{ steps.installer.outputs.path }}
           if-no-files-found: error
           compression-level: 0
           overwrite: true
 
   release:
-    name: sign and upload windows x64 ${{ matrix.flavor }}
+    name: sign and upload Windows x64 WPF installer
     if: inputs.release_tag != ''
     needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        flavor: [wpf, desktop]
     uses: ./.github/workflows/upload-sign.yml
     with:
       release_tag: ${{ inputs.release_tag }}
       desktop_release: true
       artifact_name: release-windows-installers
-      file_pattern: "v2rayN-windows-64${{ matrix.flavor == 'desktop' && '-desktop' || '' }}.exe"
+      file_pattern: "v2rayN-windows-64-v${{ needs.build.outputs.version }}.exe"
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
