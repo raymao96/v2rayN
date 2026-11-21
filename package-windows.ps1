@@ -5,10 +5,15 @@ param(
     [ValidateSet('all', 'wpf', 'desktop')]
     [string]$Flavor = 'all',
     [string]$Version,
+    [ValidateSet('zh-TW', 'zh-CN')]
+    [string]$InstallerCulture,
     [string]$WixVersion = '7.0.1',
     [string]$Output = 'dist',
     [string]$XrayRef,
-    [string]$SingBoxRef
+    [string]$SingBoxRef,
+    [ValidateSet('medium', 'high')]
+    [string]$CabinetCompression = 'medium',
+    [switch]$StoreInstallerPayload
 )
 
 Set-StrictMode -Version Latest
@@ -243,6 +248,8 @@ if ($LASTEXITCODE -ne 0 -or -not ($sdk -match '^10\.')) { throw '.NET 10 SDK is 
 $runtimes = @(& dotnet --list-runtimes)
 if ($LASTEXITCODE -ne 0 -or -not ($runtimes -match '^Microsoft\.NETCore\.App 8\.')) { throw 'WiX 7 requires the .NET 8 runtime on the build machine.' }
 if ($Arch -eq 'i386') { $Arch = 'x86' }
+$msiCompression = if ($StoreInstallerPayload) { 'none' } else { $CabinetCompression }
+$bundleCompression = @(if ($StoreInstallerPayload) { '-dcl'; 'none' })
 $arches = if ($Arch -eq 'all') { @('x64','x86','arm64') } else { @($Arch) }
 $flavors = if ($Flavor -eq 'all') { @('wpf','desktop') } else { @($Flavor) }
 $archMap = @{
@@ -274,6 +281,13 @@ $dist = if ([System.IO.Path]::IsPathRooted($Output)) { $Output } else { Join-Pat
 New-Item -ItemType Directory -Force -Path $work, $dist | Out-Null
 $wixDir = Join-Path $work 'wix-tools'
 $wix = Join-Path $wixDir 'wix.exe'
+$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+if (-not (Test-Path -LiteralPath $vswhere -PathType Leaf)) {
+    throw 'Visual Studio C++ Build Tools are required to build the installer maintenance extension.'
+}
+$msbuild = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find 'MSBuild\Current\Bin\MSBuild.exe' |
+    Select-Object -First 1
+if (-not $msbuild) { throw 'MSBuild with Visual Studio C++ Build Tools was not found.' }
 $script:Stage = 'Installing WiX toolset'
 if (Test-Path $wix) {
     $versions = @(& dotnet tool list --tool-path $wixDir)
@@ -313,14 +327,24 @@ $themeTemplate = @'
       </Button>
     </Page>
     <Page Name="Install">
-      <Label X="32" Y="141" Width="-32" Height="46" FontId="1">#(loc.InstallHeader)</Label>
-      <Label X="32" Y="201" Width="-32" Height="65" FontId="4">#(loc.InstallMessage)</Label>
+      <Label X="32" Y="141" Width="-32" Height="46" FontId="1">
+        <Text>#(loc.InstallHeader)</Text><Text Condition="RelatedInstallDetected">#(loc.ModifyHeader)</Text>
+      </Label>
+      <Label X="32" Y="201" Width="-32" Height="42" FontId="4">
+        <Text>#(loc.InstallMessage)</Text><Text Condition="RelatedInstallDetected">#(loc.ModifyMessage)</Text>
+      </Label>
+      <Label X="32" Y="245" Width="-32" Height="25" FontId="2" VisibleCondition="RelatedInstallDetected">#(loc.InstalledVersion)</Label>
       <Label Name="InstallVersion" X="32" Y="274" Width="-32" Height="28" FontId="2" VisibleCondition="WixStdBAShowVersion">#(loc.VersionText)</Label>
-      <Label X="32" Y="307" Width="-32" Height="44" FontId="2" VisibleCondition="PreviousInstallFolder">#(loc.UpgradeFolder)</Label>
-      <Button Name="OptionsButton" X="32" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="NOT PreviousInstallFolder">
+      <Label X="32" Y="307" Width="-32" Height="44" FontId="2" VisibleCondition="RelatedInstallDetected AND NOT RelatedInstallerAvailable">#(loc.InstallerCacheMissing)</Label>
+      <Label X="32" Y="307" Width="-32" Height="44" FontId="2" VisibleCondition="PreviousInstallFolder AND (NOT RelatedInstallDetected OR RelatedInstallerAvailable AND RelatedUpgradeAvailable)">#(loc.UpgradeFolder)</Label>
+      <Button Name="OptionsButton" X="32" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="NOT PreviousInstallFolder AND NOT RelatedInstallDetected">
         <Text>#(loc.Options)</Text><ChangePageAction Page="Options" />
       </Button>
-      <Button Name="InstallButton" X="-158" Y="-28" Width="120" Height="36" TabStop="yes" FontId="0" ElevationShieldCondition='(WixBundleAuthoredScope = 1 AND NOT WixBundleElevated) OR ((WixBundleAuthoredScope = 2 OR WixBundleAuthoredScope = 3) AND WixStdBAScope = "PerMachine")'>#(loc.Install)</Button>
+      <Button Name="RelatedRepairButton" X="32" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="RelatedInstallerAvailable" ElevationShieldCondition="NOT WixBundleElevated">#(loc.Repair)</Button>
+      <Button Name="RelatedUninstallButton" X="174" Y="-28" Width="124" Height="36" TabStop="yes" FontId="0" VisibleCondition="RelatedInstallerAvailable" ElevationShieldCondition="NOT WixBundleElevated">#(loc.Uninstall)</Button>
+      <Button Name="InstallButton" X="-158" Y="-28" Width="120" Height="36" TabStop="yes" FontId="0" VisibleCondition="NOT RelatedInstallDetected OR RelatedUpgradeAvailable" ElevationShieldCondition='(WixBundleAuthoredScope = 1 AND NOT WixBundleElevated) OR ((WixBundleAuthoredScope = 2 OR WixBundleAuthoredScope = 3) AND WixStdBAScope = "PerMachine")'>
+        <Text>#(loc.Install)</Text><Text Condition="RelatedUpgradeAvailable">#(loc.Upgrade)</Text>
+      </Button>
       <Button Name="InstallCancelButton" X="-30" Y="-28" Width="110" Height="36" TabStop="yes" FontId="0">
         <Text>#(loc.Close)</Text><CloseWindowAction />
       </Button>
@@ -408,9 +432,12 @@ $themeTranslations = [ordered]@{
     InstallHeader = @('Ready to install', '准备安装', '準備安裝', 'Prêt à installer')
     InstallMessage = @('Proxy management for Windows.', 'Windows 代理管理工具。', 'Windows 代理管理工具。', 'Gestion de proxy pour Windows.')
     VersionText = @('Version [WixBundleVersion]', '版本 [WixBundleVersion]', '版本 [WixBundleVersion]', 'Version [WixBundleVersion]')
+    InstalledVersion = @('Installed version [RelatedInstalledVersion]', '已安装版本 [RelatedInstalledVersion]', '已安裝版本 [RelatedInstalledVersion]', 'Version installée [RelatedInstalledVersion]')
+    InstallerCacheMissing = @('The installed setup file is missing. Use the original installer to perform maintenance.', '找不到已安装版本的安装程序，请使用原安装程序进行维护。', '找不到已安裝版本的安裝程式，請使用原安裝程式進行維護。', 'Le programme d''installation est introuvable. Utilisez le programme d''installation d''origine.')
     UpgradeFolder = @('The existing installation folder will be kept during the update.', '更新时将保留现有安装目录。', '更新時將保留現有安裝目錄。', 'Le dossier d''installation actuel sera conservé pendant la mise à jour.')
     Options = @('Options', '选项', '選項', 'Options')
     Install = @('Install', '安装', '安裝', 'Installer')
+    Upgrade = @('Update', '更新', '更新', 'Mettre à jour')
     OptionsHeader = @('Installation options', '安装选项', '安裝選項', 'Options d''installation')
     InstallLocation = @('Install location', '安装位置', '安裝位置', 'Dossier d''installation')
     Browse = @('Browse…', '浏览…', '瀏覽…', 'Parcourir…')
@@ -442,8 +469,8 @@ $themeTranslations = [ordered]@{
     FilesInUseTitle = @('Files in use', '文件正在使用中', '檔案正在使用中', 'Fichiers en cours d''utilisation')
     FilesInUseLabel = @('These apps are using files that must be updated:', '以下应用程序正在使用需要更新的文件：', '下列應用程式正在使用需要更新的檔案：', 'Les applications suivantes utilisent des fichiers à mettre à jour :')
     FilesInUseNetfxCloseRadioButton = @('Close the applications.', '关闭这些应用程序。', '關閉這些應用程式。', 'Fermer les applications.')
-    FilesInUseCloseRadioButton = @('Close the applications and try to restart them.', '关闭这些应用程序并尝试重新启动。', '關閉這些應用程式並嘗試重新啟動。', 'Fermer les applications et essayer de les redémarrer.')
-    FilesInUseDontCloseRadioButton = @('Do not close applications; a restart will be required.', '不关闭应用程序；稍后需要重启。', '不要關閉應用程式；稍後需要重新啟動。', 'Ne pas fermer les applications ; un redémarrage sera nécessaire.')
+    FilesInUseCloseRadioButton = @('Close the applications and try to restart them.', '自动关闭上述程序，完成后尝试重新打开。', '自動關閉上述程式，完成後嘗試重新開啟。', 'Fermer les applications et essayer de les redémarrer.')
+    FilesInUseDontCloseRadioButton = @('Do not close applications; a restart will be required.', '保持上述程序运行，稍后重新启动电脑以完成处理。', '保持上述程式執行，稍後重新啟動電腦以完成處理。', 'Ne pas fermer les applications ; un redémarrage sera nécessaire.')
     FilesInUseRetryButton = @('Retry', '重试', '重試', 'Réessayer')
     FilesInUseIgnoreButton = @('Ignore', '忽略', '忽略', 'Ignorer')
     FilesInUseExitButton = @('Exit', '退出', '結束', 'Quitter')
@@ -500,6 +527,43 @@ foreach ($mapping in $localeMappings.GetEnumerator()) {
     $localizedPayloads += "      <Payload Id=`"v2rayNLocale$lcid`" Name=`"${lcid}\thm.wxl`" SourceFile=`"$source`" Compressed=`"yes`" />"
 }
 $localePayloadXml = $localizedPayloads -join "`n"
+$localizationFile = $localFiles['en-US']
+$msiLanguage = '1033'
+$msiCodepage = '1252'
+$msiStrings = @{
+    DOWNGRADE_ERROR = 'A newer version of v2rayN is installed.'
+    CLOSE_APP_PROMPT = 'Save your changes and close v2rayN before continuing.'
+    PRIOR_DIRECTORY_ERROR = 'Cannot read the previous installation directory.'
+    DESKTOP_FEATURE = 'Desktop shortcut'
+    START_FEATURE = 'Start menu shortcut'
+}
+if ($InstallerCulture) {
+    $localizationFile = Join-Path $root "installer/localization/$InstallerCulture.wxl"
+    $localization = [System.Xml.Linq.XDocument]::Load($localizationFile)
+    if ($localization.Root.Attribute('Culture').Value -ne $InstallerCulture) {
+        throw "Unexpected installer culture in $localizationFile"
+    }
+    $msiLanguage = $localization.Root.Attribute('Language').Value
+    $msiCodepage = @{ 'zh-TW' = '950'; 'zh-CN' = '936' }[$InstallerCulture]
+    $localizedStrings = @{}
+    foreach ($entry in $localization.Root.Elements()) {
+        $localizedStrings.Add($entry.Attribute('Id').Value, $entry.Attribute('Value').Value)
+    }
+    foreach ($token in $themeTokens) {
+        if (-not $localizedStrings.ContainsKey($token)) { throw "Missing localized string: $token" }
+    }
+    $msiStrings = @{
+        DOWNGRADE_ERROR = $localizedStrings['MsiDowngradeError']
+        CLOSE_APP_PROMPT = $localizedStrings['MsiCloseAppPrompt']
+        PRIOR_DIRECTORY_ERROR = $localizedStrings['MsiPreviousInstallDirError']
+        DESKTOP_FEATURE = $localizedStrings['MsiDesktopShortcut']
+        START_FEATURE = $localizedStrings['MsiStartShortcut']
+    }
+    foreach ($value in $msiStrings.Values) {
+        if ([string]::IsNullOrWhiteSpace($value)) { throw "Missing MSI translation for $InstallerCulture" }
+    }
+    $localePayloadXml = ''
+}
 
 
 
@@ -518,6 +582,15 @@ try {
     Set-Location $root
     foreach ($arch in $arches) {
         $map = $archMap[$arch]
+        $script:Stage = "Building $arch installer maintenance extension"
+        $platform = @{ x64 = 'x64'; x86 = 'Win32'; arm64 = 'ARM64' }[$arch]
+        $maintenanceDir = Join-Path $work "maintenance-$arch"
+        $maintenanceProject = Join-Path $root 'installer/maintenance/Maintenance.vcxproj'
+        Run $msbuild @($maintenanceProject, '/restore', '/p:Configuration=Release', "/p:Platform=$platform",
+            "/p:WixVersion=$WixVersion", "/p:OutDir=$maintenanceDir/", "/p:IntDir=$maintenanceDir/obj/",
+            "/p:MSBuildProjectExtensionsPath=$maintenanceDir/obj/")
+        $maintenanceDll = Join-Path $maintenanceDir 'Maintenance.dll'
+        Assert-Machine $maintenanceDll $map.Machine
         $binSource = Join-Path $work "core-$arch"
         $script:Stage = "Downloading $arch native Xray-core and sing-box from upstream GitHub Releases"
         if (Test-Path -LiteralPath $binSource) { Remove-Item -LiteralPath $binSource -Recurse -Force }
@@ -602,16 +675,22 @@ try {
                 'DIRS' = $graph.Directories
                 'FILES' = $graph.Components
                 'THEME' = Escape-Xml $themePath
-                'LOCALIZATION' = Escape-Xml $localFiles['en-US']
+                'MAINTENANCE' = Escape-Xml $maintenanceDll
+                'LOCALIZATION' = Escape-Xml $localizationFile
+                'MSI_LANGUAGE' = Escape-Xml $msiLanguage
+                'MSI_CODEPAGE' = Escape-Xml $msiCodepage
                 'LOCALPAYLOADS' = $localePayloadXml
+            }
+            foreach ($entry in $msiStrings.GetEnumerator()) {
+                $templateVars[$entry.Key] = Escape-Xml $entry.Value
             }
             $msiText = @'
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
-  <Package Name="{{NAME}}" Manufacturer="2dust" Version="{{VERSION}}" UpgradeCode="{{MSIGUID}}" Scope="perMachine" InstallerVersion="500" Language="1033">
+  <Package Name="{{NAME}}" Manufacturer="2dust" Version="{{VERSION}}" UpgradeCode="{{MSIGUID}}" Scope="perMachine" InstallerVersion="500" Language="{{MSI_LANGUAGE}}" Codepage="{{MSI_CODEPAGE}}">
     <MediaTemplate EmbedCab="yes" />
-    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of v2rayN is installed." />
-    <util:CloseApplication Id="CloseV2rayN" Target="v2rayN.exe" CloseMessage="yes" PromptToContinue="yes" Description="Save your changes and close v2rayN before continuing." Timeout="20" RebootPrompt="yes" />
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="{{DOWNGRADE_ERROR}}" />
+    <util:CloseApplication Id="CloseV2rayN" Target="v2rayN.exe" CloseMessage="yes" PromptToContinue="yes" Description="{{CLOSE_APP_PROMPT}}" Timeout="20" RebootPrompt="yes" />
     <Property Id="CREATE_DESKTOP_SHORTCUT" Value="1" Secure="yes" />
     <Property Id="CREATE_STARTMENU_SHORTCUT" Value="1" Secure="yes" />
     <Property Id="PREVIOUS_DIR" Secure="yes"><RegistrySearch Id="FindPreviousDir" Root="HKLM" Key="{{REGKEY}}" Name="InstallDir" Type="raw" /></Property>
@@ -619,7 +698,7 @@ try {
     <Property Id="CLEAN_CONFIG"><RegistrySearch Id="FindConfig" Root="HKLM" Key="{{REGKEY}}" Name="ConfigDir" Type="raw" /></Property>
     <Property Id="CLEAN_LOGS"><RegistrySearch Id="FindLogs" Root="HKLM" Key="{{REGKEY}}" Name="LogsDir" Type="raw" /></Property>
     <Property Id="CLEAN_TEMPS"><RegistrySearch Id="FindTemps" Root="HKLM" Key="{{REGKEY}}" Name="TempsDir" Type="raw" /></Property>
-    <Launch Condition="NOT WIX_UPGRADE_DETECTED OR PREVIOUS_DIR" Message="Cannot read the previous installation directory." />
+    <Launch Condition="NOT WIX_UPGRADE_DETECTED OR PREVIOUS_DIR" Message="{{PRIOR_DIRECTORY_ERROR}}" />
     <SetDirectory Id="INSTALLFOLDER" Value="[PREVIOUS_DIR]" Condition="WIX_UPGRADE_DETECTED AND PREVIOUS_DIR" />
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="{{DIRNAME}}" />
@@ -659,11 +738,11 @@ try {
     <Feature Id="Main" Title="v2rayN" Level="1" AllowAbsent="no" Display="expand" AllowAdvertise="no" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentGroupRef Id="AllFiles" />
       <ComponentRef Id="DirState" />
-      <Feature Id="DesktopOpt" Title="Desktop shortcut" Level="1" AllowAdvertise="no">
+      <Feature Id="DesktopOpt" Title="{{DESKTOP_FEATURE}}" Level="1" AllowAdvertise="no">
         <Level Condition="CREATE_DESKTOP_SHORTCUT = &quot;0&quot;" Value="0" />
         <ComponentRef Id="DesktopLink" />
       </Feature>
-      <Feature Id="StartOpt" Title="Start menu shortcut" Level="1" AllowAdvertise="no">
+      <Feature Id="StartOpt" Title="{{START_FEATURE}}" Level="1" AllowAdvertise="no">
         <Level Condition="CREATE_STARTMENU_SHORTCUT = &quot;0&quot;" Value="0" />
         <ComponentRef Id="StartMenuLink" />
       </Feature>
@@ -688,7 +767,7 @@ try {
             $msiSource = Join-Path $work "$flavor-$arch.wxs"
             [System.IO.File]::WriteAllText($msiSource, $msiText, [System.Text.UTF8Encoding]::new($false))
             $script:Stage = "Building $flavor $arch MSI"
-            Run $wix @('build',$msiSource,'-arch',$map.Wix,'-ext','WixToolset.Util.wixext','-o',$templateVars.MSI)
+            Run $wix @('build',$msiSource,'-arch',$map.Wix,'-dcl',$msiCompression,'-ext','WixToolset.Util.wixext','-o',$templateVars.MSI)
             $bundleText = @'
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
@@ -696,6 +775,10 @@ try {
     <Variable Name="InstallFolder" Type="formatted" Value="[{{BURN_PROGRAMFILES}}]{{DIRNAME}}" />
     <Variable Name="CreateDesktopShortcut" Type="numeric" Value="1" />
     <Variable Name="CreateStartMenuShortcut" Type="numeric" Value="1" />
+    <Variable Name="RelatedInstallDetected" Type="numeric" Value="0" />
+    <Variable Name="RelatedInstallerAvailable" Type="numeric" Value="0" />
+    <Variable Name="RelatedUpgradeAvailable" Type="numeric" Value="0" />
+    <Variable Name="RelatedInstalledVersion" Type="string" Value="-" />
     <util:RegistrySearch Id="GetInstallFolder" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="InstallDir" Variable="PreviousInstallFolder" Result="value" />
     <util:RegistrySearch Id="GetDesktop" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="DesktopEnabled" Variable="PreviousDesktopEnabled" Result="value" />
     <util:RegistrySearch Id="GetStart" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="StartMenuEnabled" Variable="PreviousStartMenuEnabled" Result="value" />
@@ -704,6 +787,7 @@ try {
     <SetVariable Id="RestoreStart" Variable="CreateStartMenuShortcut" Type="numeric" Value="[PreviousStartMenuEnabled]" Condition='PreviousStartMenuEnabled = "0" OR PreviousStartMenuEnabled = "1"' After="GetStart" />
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication Theme="hyperlinkLargeLicense" ThemeFile="{{THEME}}" LocalizationFile="{{LOCALIZATION}}" LogoFile="{{LOGO}}" LicenseUrl="" ShowVersion="yes" LaunchTarget="[InstallFolder]\v2rayN.exe" SuppressRepair="no" SuppressOptionsUI="no" />
+      <Payload SourceFile="{{MAINTENANCE}}" bal:BAFunctions="yes" />
 {{LOCALPAYLOADS}}
     </BootstrapperApplication>
     <Chain>
@@ -725,7 +809,7 @@ try {
             $fileName = "v2rayN-windows-$archSuffix$desktopSuffix.exe"
             $setup = Join-Path $dist $fileName
             $script:Stage = "Building $flavor $arch native EXE installer"
-            Run $wix @('build',$bundleSource,'-arch',$map.Wix,'-ext','WixToolset.Util.wixext','-ext','WixToolset.BootstrapperApplications.wixext','-o',$setup)
+            Run $wix (@('build',$bundleSource,'-arch',$map.Wix,'-ext','WixToolset.Util.wixext','-ext','WixToolset.BootstrapperApplications.wixext','-o',$setup) + $bundleCompression)
             Assert-Machine $setup $map.Machine
             Write-Host "Created: $setup"
         }

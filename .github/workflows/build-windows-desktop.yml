@@ -1,6 +1,14 @@
 name: release Windows desktop (Avalonia UI)
 
 on:
+  workflow_call:
+    inputs:
+      release_tag:
+        required: false
+        type: string
+    secrets:
+      GPG_PRIVATE_KEY:
+        required: true
   workflow_dispatch:
     inputs:
       release_tag:
