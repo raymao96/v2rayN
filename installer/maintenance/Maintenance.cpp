@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commctrl.h>
+#include <msi.h>
 #include <shellapi.h>
 #include <cwchar>
 #include <memory>
