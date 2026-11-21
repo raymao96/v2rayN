@@ -101,12 +101,3 @@ jobs:
         file_glob: true
         prerelease: true
         overwrite: true
-
-    - name: Promote Windows release
-      if: inputs.desktop_release
-      shell: bash
-      env:
-        GH_TOKEN: ${{ github.token }}
-        GH_REPO: ${{ github.repository }}
-        RELEASE_TAG: ${{ steps.release.outputs.tag }}
-      run: gh release edit --prerelease=false -- "$RELEASE_TAG"

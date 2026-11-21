@@ -7,8 +7,8 @@ on:
         required: false
         type: string
 
-permissions: 
-  actions: write
+permissions:
+  actions: read
   contents: write
 
 jobs:
@@ -17,51 +17,43 @@ jobs:
     uses: ./.github/workflows/pub-key.yml
     with:
       release_tag: ${{ inputs.release_tag }}
-    secrets:
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+    secrets: inherit
 
-  update:
+  wpf:
+    needs: public-key
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      release_tag: ${{ inputs.release_tag }}
+    secrets: inherit
+
+  desktop:
+    needs: wpf
+    uses: ./.github/workflows/build-windows-desktop.yml
+    with:
+      release_tag: ${{ inputs.release_tag }}
+    secrets: inherit
+
+  installers:
+    needs: desktop
+    uses: ./.github/workflows/build-windows-package.yml
+    with:
+      release_tag: ${{ inputs.release_tag }}
+    secrets: inherit
+
+  publish:
+    needs: [public-key, wpf, desktop, installers]
     runs-on: ubuntu-latest
     steps:
-
-      - name: Trigger build windows
-        if: inputs.release_tag != ''
+      - name: Promote completed release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION_INPUT: ${{ inputs.release_tag }}
         run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/build-windows.yml/dispatches \
-            -d "{
-              \"ref\": \"$GITHUB_REF_NAME\",
-              \"inputs\": {
-                \"release_tag\": \"${{ inputs.release_tag }}\"
-              }
-            }"
-
-      - name: Trigger build windows desktop
-        if: inputs.release_tag != ''
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/build-windows-desktop.yml/dispatches \
-            -d "{
-              \"ref\": \"$GITHUB_REF_NAME\",
-              \"inputs\": {
-                \"release_tag\": \"${{ inputs.release_tag }}\"
-              }
-            }"
-
-      - name: Trigger build windows package
-        if: inputs.release_tag != ''
-        run: |
-          curl -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/actions/workflows/build-windows-package.yml/dispatches \
-            -d "{
-              \"ref\": \"$GITHUB_REF_NAME\",
-              \"inputs\": {
-                \"release_tag\": \"${{ inputs.release_tag }}\"
-              }
-            }"
+          set -euo pipefail
+          tag="$VERSION_INPUT"
+          if [[ "$GITHUB_REF_NAME" == tw || "$GITHUB_REF_NAME" == cn ]]; then
+            tag="${GITHUB_REF_NAME}-v${VERSION_INPUT#v}"
+          fi
+          gh release edit --prerelease=false -- "$tag"

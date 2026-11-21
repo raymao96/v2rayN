@@ -35,6 +35,7 @@ jobs:
       env:
         INPUT_TARGET: ${{ inputs.target }}
         INPUT_IS_AOT: ${{ inputs.isAot }}
+        RELEASE_TAG: ${{ inputs.release_tag }}
       run: |
         set -euo pipefail
         package_dir="v2rayN-windows-64"
@@ -49,13 +50,22 @@ jobs:
           rename_suffix="-desktop${rename_suffix}"
         fi
         final_package_file="${package_dir}${rename_suffix}.zip"
+        case "$GITHUB_REF_NAME" in
+          tw|cn)
+            version=$(sed -n 's/.*<Version>\([0-9][0-9.]*\)<\/Version>.*/\1/p' v2rayN/Directory.Build.props)
+            if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || "${RELEASE_TAG#v}" != "$version" ]]; then
+              echo "::error::Expected release_tag v${version} for the version in Directory.Build.props."
+              exit 1
+            fi
+            final_package_file="v2rayN_v${version}_x64_zh${GITHUB_REF_NAME}${rename_suffix//-/_}.zip"
+            ;;
+        esac
 
         {
           echo "build_artifact_name=${build_artifact_name}"
           echo "package_dir=${package_dir}"
           echo "package_file=${package_file}"
           echo "final_package_file=${final_package_file}"
-          echo "rename_suffix=${rename_suffix}"
         } >> "$GITHUB_OUTPUT"
 
     - name: Restore build artifacts
@@ -74,11 +84,11 @@ jobs:
         7z a -tZip "${{ steps.package-vars.outputs.package_file }}" "${{ steps.package-vars.outputs.package_dir }}" -mx1
 
     - name: Rename package archive
-      if: steps.package-vars.outputs.rename_suffix != ''
+      if: steps.package-vars.outputs.package_file != steps.package-vars.outputs.final_package_file
       shell: bash
       run: |
         mv "${{ steps.package-vars.outputs.package_file }}" \
-          "${{ steps.package-vars.outputs.package_dir }}${{ steps.package-vars.outputs.rename_suffix }}.zip"
+          "${{ steps.package-vars.outputs.final_package_file }}"
 
     - name: Upload zip artifact
       uses: actions/upload-artifact@v7
