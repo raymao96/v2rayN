@@ -778,7 +778,7 @@ try {
     <Variable Name="RelatedInstallDetected" Type="numeric" Value="0" />
     <Variable Name="RelatedInstallerAvailable" Type="numeric" Value="0" />
     <Variable Name="RelatedUpgradeAvailable" Type="numeric" Value="0" />
-    <Variable Name="RelatedInstalledVersion" Type="string" />
+    <Variable Name="RelatedInstalledVersion" Type="string" Value="-" />
     <util:RegistrySearch Id="GetInstallFolder" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="InstallDir" Variable="PreviousInstallFolder" Result="value" />
     <util:RegistrySearch Id="GetDesktop" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="DesktopEnabled" Variable="PreviousDesktopEnabled" Result="value" />
     <util:RegistrySearch Id="GetStart" Root="HKLM" Bitness="{{REG_BITNESS}}" Key="{{REGKEY}}" Value="StartMenuEnabled" Variable="PreviousStartMenuEnabled" Result="value" />
