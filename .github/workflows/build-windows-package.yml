@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       compression_trial:
-        description: 'Build and test an LZMA2 installer archive without publishing a Release'
+        description: 'Build and test the WPF LZMA2 installer archive without publishing a Release'
         type: boolean
         default: false
   push:
@@ -84,6 +84,7 @@ jobs:
               throw 'Run the compression trial on tw, cn, or a matching codex/tw-* or codex/cn-* branch.'
             }
             $options.StoreInstallerPayload = $true
+            $options.Flavor = 'wpf'
           }
           if ($env:RELEASE_TAG) {
             $version = $env:RELEASE_TAG -replace '^v', ''
@@ -122,7 +123,9 @@ jobs:
           Set-Location dist
           $installers = [ordered]@{
             'v2rayN-windows-64.exe' = $env:PACKAGE_BASE
-            'v2rayN-windows-64-desktop.exe' = "${env:PACKAGE_BASE}_desktop"
+          }
+          if ($env:COMPRESSION_TRIAL -ne 'true') {
+            $installers['v2rayN-windows-64-desktop.exe'] = "${env:PACKAGE_BASE}_desktop"
           }
           $built = @(Get-ChildItem -File -Filter 'v2rayN-windows-*.exe')
           if ($built.Count -ne $installers.Count) {
