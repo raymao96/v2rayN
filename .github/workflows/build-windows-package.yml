@@ -104,6 +104,7 @@ jobs:
             }
             $options.Version = $sourceVersion
             $options.CabinetCompression = 'high'
+            $options.InstallerCulture = @{ tw = 'zh-TW'; cn = 'zh-CN' }[$region]
             "package_base=v2rayN_v${sourceVersion}_x64_zh${region}" >> $env:GITHUB_OUTPUT
           }
           $scriptPath = Join-Path $env:GITHUB_WORKSPACE 'package-windows.ps1'
@@ -163,15 +164,24 @@ jobs:
           }
 
       - name: Upload Windows x64 installers
+        if: '!inputs.compression_trial'
         uses: actions/upload-artifact@v7
         with:
           name: release-windows-installers
           path: |
-            ${{ !inputs.compression_trial && 'dist/v2rayN*.exe' || '' }}
+            dist/v2rayN*.exe
             dist/v2rayN*.7z
           if-no-files-found: error
           compression-level: 0
           overwrite: true
+
+      - name: Upload WPF trial archive directly
+        if: inputs.compression_trial
+        uses: actions/upload-artifact@v7
+        with:
+          path: dist/${{ steps.installer.outputs.package_base }}.7z
+          archive: false
+          if-no-files-found: error
 
       - name: Test extracted WPF installer
         if: inputs.compression_trial

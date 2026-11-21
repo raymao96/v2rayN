@@ -5,6 +5,8 @@ param(
     [ValidateSet('all', 'wpf', 'desktop')]
     [string]$Flavor = 'all',
     [string]$Version,
+    [ValidateSet('zh-TW', 'zh-CN')]
+    [string]$InstallerCulture,
     [string]$WixVersion = '7.0.1',
     [string]$Output = 'dist',
     [string]$XrayRef,
@@ -505,6 +507,43 @@ foreach ($mapping in $localeMappings.GetEnumerator()) {
     $localizedPayloads += "      <Payload Id=`"v2rayNLocale$lcid`" Name=`"${lcid}\thm.wxl`" SourceFile=`"$source`" Compressed=`"yes`" />"
 }
 $localePayloadXml = $localizedPayloads -join "`n"
+$localizationFile = $localFiles['en-US']
+$msiLanguage = '1033'
+$msiCodepage = '1252'
+$msiStrings = @{
+    DOWNGRADE_ERROR = 'A newer version of v2rayN is installed.'
+    CLOSE_APP_PROMPT = 'Save your changes and close v2rayN before continuing.'
+    PRIOR_DIRECTORY_ERROR = 'Cannot read the previous installation directory.'
+    DESKTOP_FEATURE = 'Desktop shortcut'
+    START_FEATURE = 'Start menu shortcut'
+}
+if ($InstallerCulture) {
+    $localizationFile = Join-Path $root "installer/localization/$InstallerCulture.wxl"
+    $localization = [System.Xml.Linq.XDocument]::Load($localizationFile)
+    if ($localization.Root.Attribute('Culture').Value -ne $InstallerCulture) {
+        throw "Unexpected installer culture in $localizationFile"
+    }
+    $msiLanguage = $localization.Root.Attribute('Language').Value
+    $msiCodepage = @{ 'zh-TW' = '950'; 'zh-CN' = '936' }[$InstallerCulture]
+    $localizedStrings = @{}
+    foreach ($entry in $localization.Root.Elements()) {
+        $localizedStrings.Add($entry.Attribute('Id').Value, $entry.Attribute('Value').Value)
+    }
+    foreach ($token in $themeTokens) {
+        if (-not $localizedStrings.ContainsKey($token)) { throw "Missing localized string: $token" }
+    }
+    $msiStrings = @{
+        DOWNGRADE_ERROR = $localizedStrings['MsiDowngradeError']
+        CLOSE_APP_PROMPT = $localizedStrings['MsiCloseAppPrompt']
+        PRIOR_DIRECTORY_ERROR = $localizedStrings['MsiPreviousInstallDirError']
+        DESKTOP_FEATURE = $localizedStrings['MsiDesktopShortcut']
+        START_FEATURE = $localizedStrings['MsiStartShortcut']
+    }
+    foreach ($value in $msiStrings.Values) {
+        if ([string]::IsNullOrWhiteSpace($value)) { throw "Missing MSI translation for $InstallerCulture" }
+    }
+    $localePayloadXml = ''
+}
 
 
 
@@ -607,16 +646,21 @@ try {
                 'DIRS' = $graph.Directories
                 'FILES' = $graph.Components
                 'THEME' = Escape-Xml $themePath
-                'LOCALIZATION' = Escape-Xml $localFiles['en-US']
+                'LOCALIZATION' = Escape-Xml $localizationFile
+                'MSI_LANGUAGE' = Escape-Xml $msiLanguage
+                'MSI_CODEPAGE' = Escape-Xml $msiCodepage
                 'LOCALPAYLOADS' = $localePayloadXml
+            }
+            foreach ($entry in $msiStrings.GetEnumerator()) {
+                $templateVars[$entry.Key] = Escape-Xml $entry.Value
             }
             $msiText = @'
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
-  <Package Name="{{NAME}}" Manufacturer="2dust" Version="{{VERSION}}" UpgradeCode="{{MSIGUID}}" Scope="perMachine" InstallerVersion="500" Language="1033">
+  <Package Name="{{NAME}}" Manufacturer="2dust" Version="{{VERSION}}" UpgradeCode="{{MSIGUID}}" Scope="perMachine" InstallerVersion="500" Language="{{MSI_LANGUAGE}}" Codepage="{{MSI_CODEPAGE}}">
     <MediaTemplate EmbedCab="yes" />
-    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of v2rayN is installed." />
-    <util:CloseApplication Id="CloseV2rayN" Target="v2rayN.exe" CloseMessage="yes" PromptToContinue="yes" Description="Save your changes and close v2rayN before continuing." Timeout="20" RebootPrompt="yes" />
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="{{DOWNGRADE_ERROR}}" />
+    <util:CloseApplication Id="CloseV2rayN" Target="v2rayN.exe" CloseMessage="yes" PromptToContinue="yes" Description="{{CLOSE_APP_PROMPT}}" Timeout="20" RebootPrompt="yes" />
     <Property Id="CREATE_DESKTOP_SHORTCUT" Value="1" Secure="yes" />
     <Property Id="CREATE_STARTMENU_SHORTCUT" Value="1" Secure="yes" />
     <Property Id="PREVIOUS_DIR" Secure="yes"><RegistrySearch Id="FindPreviousDir" Root="HKLM" Key="{{REGKEY}}" Name="InstallDir" Type="raw" /></Property>
@@ -624,7 +668,7 @@ try {
     <Property Id="CLEAN_CONFIG"><RegistrySearch Id="FindConfig" Root="HKLM" Key="{{REGKEY}}" Name="ConfigDir" Type="raw" /></Property>
     <Property Id="CLEAN_LOGS"><RegistrySearch Id="FindLogs" Root="HKLM" Key="{{REGKEY}}" Name="LogsDir" Type="raw" /></Property>
     <Property Id="CLEAN_TEMPS"><RegistrySearch Id="FindTemps" Root="HKLM" Key="{{REGKEY}}" Name="TempsDir" Type="raw" /></Property>
-    <Launch Condition="NOT WIX_UPGRADE_DETECTED OR PREVIOUS_DIR" Message="Cannot read the previous installation directory." />
+    <Launch Condition="NOT WIX_UPGRADE_DETECTED OR PREVIOUS_DIR" Message="{{PRIOR_DIRECTORY_ERROR}}" />
     <SetDirectory Id="INSTALLFOLDER" Value="[PREVIOUS_DIR]" Condition="WIX_UPGRADE_DETECTED AND PREVIOUS_DIR" />
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="{{DIRNAME}}" />
@@ -664,11 +708,11 @@ try {
     <Feature Id="Main" Title="v2rayN" Level="1" AllowAbsent="no" Display="expand" AllowAdvertise="no" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentGroupRef Id="AllFiles" />
       <ComponentRef Id="DirState" />
-      <Feature Id="DesktopOpt" Title="Desktop shortcut" Level="1" AllowAdvertise="no">
+      <Feature Id="DesktopOpt" Title="{{DESKTOP_FEATURE}}" Level="1" AllowAdvertise="no">
         <Level Condition="CREATE_DESKTOP_SHORTCUT = &quot;0&quot;" Value="0" />
         <ComponentRef Id="DesktopLink" />
       </Feature>
-      <Feature Id="StartOpt" Title="Start menu shortcut" Level="1" AllowAdvertise="no">
+      <Feature Id="StartOpt" Title="{{START_FEATURE}}" Level="1" AllowAdvertise="no">
         <Level Condition="CREATE_STARTMENU_SHORTCUT = &quot;0&quot;" Value="0" />
         <ComponentRef Id="StartMenuLink" />
       </Feature>
