@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Existing Git tag to publish the installers to (leave blank to build only)'
+        description: 'Optional version check for the existing regional Release (for example v7.25.6)'
         required: false
         type: string
 
@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 360
     outputs:
       version: ${{ steps.installer.outputs.version }}
+      release_tag: ${{ steps.installer.outputs.release_tag }}
+      release_title: ${{ steps.installer.outputs.release_title }}
 
     steps:
       - name: Checkout source
@@ -70,8 +72,9 @@ jobs:
           if ($version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
             throw 'Invalid application version in Directory.Build.props.'
           }
-          if ($env:RELEASE_TAG -and ($ref -ne $edition -or ($env:RELEASE_TAG -replace '^v', '') -ne $version)) {
-            throw "Release $env:RELEASE_TAG must match application version v$version on branch $edition."
+          $releaseTag = "$edition-v$version"
+          if ($env:RELEASE_TAG -and $env:RELEASE_TAG -notin @($releaseTag, "v$version", $version)) {
+            throw "Expected Release $releaseTag for application version $version."
           }
           $options = @{
             Arch = 'x64'
@@ -81,6 +84,8 @@ jobs:
           }
           "path=dist/v2rayN-windows-64-v$version.exe" >> $env:GITHUB_OUTPUT
           "version=$version" >> $env:GITHUB_OUTPUT
+          "release_tag=$releaseTag" >> $env:GITHUB_OUTPUT
+          "release_title=$($edition.ToUpperInvariant()) v$version" >> $env:GITHUB_OUTPUT
           Write-Host "Building $culture v$version from $(git rev-parse HEAD)"
           $scriptPath = Join-Path $env:GITHUB_WORKSPACE 'package-windows.ps1'
           if (-not (Test-Path -LiteralPath $scriptPath -PathType Leaf)) {
@@ -113,12 +118,11 @@ jobs:
 
   release:
     name: sign and upload Windows x64 WPF installer
-    if: inputs.release_tag != ''
     needs: build
     uses: ./.github/workflows/upload-sign.yml
     with:
-      release_tag: ${{ inputs.release_tag }}
-      desktop_release: true
+      release_tag: ${{ needs.build.outputs.release_tag }}
+      existing_release_title: ${{ needs.build.outputs.release_title }}
       artifact_name: release-windows-installers
       file_pattern: "v2rayN-windows-64-v${{ needs.build.outputs.version }}.exe"
     secrets:

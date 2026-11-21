@@ -10,6 +10,9 @@ on:
         required: false
         type: boolean
         default: false
+      existing_release_title:
+        required: false
+        type: string
       artifact_name:
         required: true
         type: string
@@ -52,6 +55,19 @@ jobs:
         echo "tag=$tag" >> "$GITHUB_OUTPUT"
         echo "title=$title" >> "$GITHUB_OUTPUT"
 
+    - name: Confirm existing Release identity
+      if: inputs.existing_release_title != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        EXPECTED_TITLE: ${{ inputs.existing_release_title }}
+      run: |
+        set -euo pipefail
+        release=$(gh release view "$RELEASE_TAG" --json name,isDraft)
+        jq -e --arg title "$EXPECTED_TITLE" '.name == $title and (.isDraft | not)' <<<"$release"
+
     - name: Download release artifact
       uses: actions/download-artifact@v8
       with:
@@ -80,7 +96,38 @@ jobs:
           gpg --batch --yes --armor --detach-sign --output "$f.sig" "$f"
         done
 
+    - name: Append signed installer to the existing Release
+      if: inputs.existing_release_title != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        INSTALLER: ${{ inputs.file_pattern }}
+      run: |
+        set -euo pipefail
+        cd dist
+        assets=$(gh release view "$RELEASE_TAG" --json assets)
+        previous=$(mktemp -d)
+        pending=()
+        for file in "$INSTALLER" "$INSTALLER.sig"; do
+          if jq -e --arg name "$file" '.assets | any(.name == $name)' <<<"$assets" >/dev/null; then
+            gh release download "$RELEASE_TAG" --pattern "$file" --dir "$previous"
+            if [[ "$file" == "$INSTALLER.sig" ]]; then
+              gpg --batch --verify "$previous/$file" "$INSTALLER"
+            else
+              cmp "$previous/$file" "$INSTALLER"
+            fi
+          else
+            pending+=("$file")
+          fi
+        done
+        if (( ${#pending[@]} )); then
+          gh release upload "$RELEASE_TAG" "${pending[@]}"
+        fi
+
     - name: Upload release files
+      if: inputs.existing_release_title == ''
       uses: svenstaro/upload-release-action@v2
       with:
         file: dist/${{ inputs.file_pattern }}
@@ -92,6 +139,7 @@ jobs:
         overwrite: true
 
     - name: Upload release signatures
+      if: inputs.existing_release_title == ''
       uses: svenstaro/upload-release-action@v2
       with:
         file: dist/${{ inputs.file_pattern }}.sig
@@ -103,7 +151,7 @@ jobs:
         overwrite: true
 
     - name: Promote Windows release
-      if: inputs.desktop_release
+      if: inputs.desktop_release && inputs.existing_release_title == ''
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
