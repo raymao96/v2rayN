@@ -163,7 +163,7 @@ namespace
             launch.nShow = SW_SHOWNORMAL;
             if (!setup.empty() && ShellExecuteExW(&launch))
             {
-                PostMessageW(launch.hwnd, WM_CLOSE, 0, 0);
+                PostQuitMessage(0);
             }
             else
             {
