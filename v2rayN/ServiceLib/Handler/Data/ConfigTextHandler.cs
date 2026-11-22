@@ -118,6 +118,19 @@ public static class ConfigTextHandler
         config.MsgUIItem ??= new();
 
         config.UiItem ??= new();
+        if (string.IsNullOrWhiteSpace(config.UiItem.CurrentTheme))
+        {
+            config.UiItem.CurrentTheme = nameof(ETheme.FollowSystem);
+        }
+        if (string.IsNullOrWhiteSpace(config.UiItem.ColorPrimaryName))
+        {
+            config.UiItem.ColorPrimaryName = "blue";
+        }
+        if (config.UiItem.CurrentFontSize <= 0)
+        {
+            config.UiItem.CurrentFontSize = 12;
+        }
+
         config.UiItem.MainColumnItem ??= [];
         config.UiItem.WindowSizeItem ??= [];
         if (config.UiItem.FrozenColumnCount == null)
