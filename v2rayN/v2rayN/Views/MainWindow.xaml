@@ -46,7 +46,7 @@
                         KeyboardNavigation.TabNavigation="Continue"
                         Style="{StaticResource MaterialDesignToolBar}">
                         <Menu Margin="0,1" Style="{StaticResource ToolbarMenu}">
-                            <MenuItem Padding="{StaticResource MarginLeftRight8}" AutomationProperties.Name="{x:Static resx:ResUI.menuServers}">
+                            <MenuItem Padding="{StaticResource MarginLeftRight8}" AutomationProperties.Name="{x:Static resx:ResUI.menuServers}" Loaded="ToolbarMenuItem_Loaded">
                                 <MenuItem.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon
@@ -141,7 +141,7 @@
                         </Menu>
                         <Separator />
                         <Menu Margin="0,1" Style="{StaticResource ToolbarMenu}">
-                            <MenuItem Padding="{StaticResource MarginLeftRight8}" AutomationProperties.Name="{x:Static resx:ResUI.menuSubscription}">
+                            <MenuItem Padding="{StaticResource MarginLeftRight8}" AutomationProperties.Name="{x:Static resx:ResUI.menuSubscription}" Loaded="ToolbarMenuItem_Loaded">
                                 <MenuItem.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon
@@ -176,7 +176,7 @@
                         </Menu>
                         <Separator />
                         <Menu Margin="0,1" Style="{StaticResource ToolbarMenu}">
-                            <MenuItem Padding="{StaticResource MarginLeftRight8}" AutomationProperties.Name="{x:Static resx:ResUI.menuSetting}">
+                            <MenuItem Padding="{StaticResource MarginLeftRight8}" AutomationProperties.Name="{x:Static resx:ResUI.menuSetting}" Loaded="ToolbarMenuItem_Loaded">
                                 <MenuItem.Header>
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon

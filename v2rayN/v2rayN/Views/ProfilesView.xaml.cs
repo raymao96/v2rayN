@@ -11,6 +11,7 @@ public partial class ProfilesView
 {
     private static Config _config;
     private static readonly string _tag = "ProfilesView";
+    private Point _profilesContextMenuPosition;
 
     public ProfilesView()
     {
@@ -24,6 +25,8 @@ public partial class ProfilesView
         lstProfiles.PreviewKeyDown += LstProfiles_PreviewKeyDown;
         lstProfiles.SelectionChanged += LstProfiles_SelectionChanged;
         lstProfiles.LoadingRow += LstProfiles_LoadingRow;
+        lstProfiles.ContextMenuOpening += LstProfiles_ContextMenuOpening;
+        lstProfiles.ContextMenu.CustomPopupPlacementCallback = PlaceProfilesContextMenu;
         menuSelectAll.Click += menuSelectAll_Click;
 
         if (_config.UiItem.EnableDragDropSort)
@@ -152,6 +155,35 @@ public partial class ProfilesView
         });
 
         RestoreUI();
+    }
+
+    private void LstProfiles_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        if (e.CursorLeft == -1 && e.CursorTop == -1)
+        {
+            lstProfiles.ClearValue(ContextMenuService.PlacementProperty);
+            return;
+        }
+
+        var position = Mouse.GetPosition(lstProfiles);
+        var screenPosition = lstProfiles.PointToScreen(position);
+        var screenOrigin = lstProfiles.PointToScreen(new Point(0, 0));
+        _profilesContextMenuPosition = new Point(screenPosition.X - screenOrigin.X, screenPosition.Y - screenOrigin.Y);
+        ContextMenuService.SetPlacementTarget(lstProfiles, lstProfiles);
+        ContextMenuService.SetPlacement(lstProfiles, PlacementMode.Custom);
+    }
+
+    private CustomPopupPlacement[] PlaceProfilesContextMenu(Size popupSize, Size targetSize, Point offset)
+    {
+        var x = _profilesContextMenuPosition.X;
+        var y = _profilesContextMenuPosition.Y;
+        return
+        [
+            new(new Point(x, y), PopupPrimaryAxis.None),
+            new(new Point(x, y - popupSize.Height), PopupPrimaryAxis.None),
+            new(new Point(x - popupSize.Width, y), PopupPrimaryAxis.None),
+            new(new Point(x - popupSize.Width, y - popupSize.Height), PopupPrimaryAxis.None)
+        ];
     }
 
     #region Event
