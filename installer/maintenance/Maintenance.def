@@ -1,0 +1,7 @@
+EXPORTS
+    BAFunctionsCreate
+    BAFunctionsDestroy
+    PrepareConfigPreserve
+    BackupConfigPreserve
+    RestoreConfigPreserve
+    RollbackConfigPreserve

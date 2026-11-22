@@ -1,6 +1,14 @@
 name: release Windows
 
 on:
+  workflow_call:
+    inputs:
+      release_tag:
+        required: false
+        type: string
+    secrets:
+      GPG_PRIVATE_KEY:
+        required: true
   workflow_dispatch:
     inputs:
       release_tag:
@@ -18,7 +26,6 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      target: windows
       project: ./v2rayN/v2rayN.csproj
 
   release-zip:

@@ -22,6 +22,25 @@ jobs:
   publish:
     runs-on: ubuntu-26.04
     steps:
+    - name: Resolve release identity
+      id: release
+      shell: bash
+      env:
+        VERSION_INPUT: ${{ inputs.release_tag }}
+        REGIONAL_RELEASE: ${{ (github.ref_name == 'tw' || github.ref_name == 'cn') }}
+      run: |
+        tag="$VERSION_INPUT"
+        title="$tag"
+        if [[ "$REGIONAL_RELEASE" == true ]]; then
+          version="v${VERSION_INPUT#v}"
+          tag="${GITHUB_REF_NAME}-$version"
+          region="$(printf '%s' "$GITHUB_REF_NAME" | tr '[:lower:]' '[:upper:]')"
+          title="$region $version"
+          echo "target_commit=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+        fi
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+        echo "title=$title" >> "$GITHUB_OUTPUT"
+
     - name: Import GPG private key
       shell: bash
       env:
@@ -43,6 +62,8 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         file: v2rayN-public-key.asc
-        tag: ${{ inputs.release_tag }}
+        tag: ${{ steps.release.outputs.tag }}
+        release_name: ${{ steps.release.outputs.title }}
+        target_commit: ${{ steps.release.outputs.target_commit }}
         prerelease: true
         overwrite: true

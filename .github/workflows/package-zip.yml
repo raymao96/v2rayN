@@ -6,7 +6,7 @@ on:
       release_tag:
         required: true
         type: string
-      target: # windows linux macos windows-desktop
+      target: # windows or windows-desktop
         required: true
         type: string
       isAot:
@@ -23,26 +23,8 @@ permissions:
 
 jobs:
   package:
-    name: package x64 arm64
-    strategy:
-      matrix:
-        arch: [ x64, arm64 ]
+    name: package Windows x64
     runs-on: ubuntu-latest
-    env:
-      Target: |- 
-        ${{
-          case(
-            inputs.target == 'windows-desktop', 'windows',
-            inputs.target
-          )
-        }}
-      Arch: |-
-        ${{
-          case(
-            matrix.arch == 'x64', '64',
-            matrix.arch
-          ) 
-        }}
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -53,11 +35,12 @@ jobs:
       env:
         INPUT_TARGET: ${{ inputs.target }}
         INPUT_IS_AOT: ${{ inputs.isAot }}
+        RELEASE_TAG: ${{ inputs.release_tag }}
       run: |
         set -euo pipefail
-        package_dir="v2rayN-${Target}-${Arch}"
+        package_dir="v2rayN-windows-64"
         package_file="${package_dir}.zip"
-        build_artifact_name="${{ matrix.arch }}"
+        build_artifact_name="x64"
         rename_suffix=""
         if [[ "$INPUT_IS_AOT" == "true" ]]; then
           build_artifact_name="${build_artifact_name}-aot"
@@ -67,13 +50,22 @@ jobs:
           rename_suffix="-desktop${rename_suffix}"
         fi
         final_package_file="${package_dir}${rename_suffix}.zip"
+        case "$GITHUB_REF_NAME" in
+          tw|cn)
+            version=$(sed -n 's/.*<Version>\([0-9][0-9.]*\)<\/Version>.*/\1/p' v2rayN/Directory.Build.props)
+            if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || "${RELEASE_TAG#v}" != "$version" ]]; then
+              echo "::error::Expected release_tag v${version} for the version in Directory.Build.props."
+              exit 1
+            fi
+            final_package_file="v2rayN_v${version}_x64_zh${GITHUB_REF_NAME}${rename_suffix//-/_}.zip"
+            ;;
+        esac
 
         {
           echo "build_artifact_name=${build_artifact_name}"
           echo "package_dir=${package_dir}"
           echo "package_file=${package_file}"
           echo "final_package_file=${final_package_file}"
-          echo "rename_suffix=${rename_suffix}"
         } >> "$GITHUB_OUTPUT"
 
     - name: Restore build artifacts
@@ -84,7 +76,7 @@ jobs:
 
     - name: Get v2rayN-core-bin
       run: |
-        wget -nv -O "${{ steps.package-vars.outputs.package_file }}" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-$Target-$Arch.zip"
+        wget -nv -O "${{ steps.package-vars.outputs.package_file }}" "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/master/v2rayN-windows-64.zip"
 
     - name: Package zip archive
       shell: bash
@@ -92,29 +84,28 @@ jobs:
         7z a -tZip "${{ steps.package-vars.outputs.package_file }}" "${{ steps.package-vars.outputs.package_dir }}" -mx1
 
     - name: Rename package archive
-      if: steps.package-vars.outputs.rename_suffix != ''
+      if: steps.package-vars.outputs.package_file != steps.package-vars.outputs.final_package_file
       shell: bash
       run: |
         mv "${{ steps.package-vars.outputs.package_file }}" \
-          "${{ steps.package-vars.outputs.package_dir }}${{ steps.package-vars.outputs.rename_suffix }}.zip"
+          "${{ steps.package-vars.outputs.final_package_file }}"
 
     - name: Upload zip artifact
       uses: actions/upload-artifact@v7
       with:
-        name: release-${{ inputs.target }}-${{ matrix.arch }}${{ inputs.isAot && '-aot' || '' }}
+        name: release-${{ inputs.target }}-x64${{ inputs.isAot && '-aot' || '' }}
         path: ${{ steps.package-vars.outputs.final_package_file }}
         if-no-files-found: error
+        overwrite: true
 
   release:
-    name: sign and upload zip x64 arm64
+    name: sign and upload Windows x64 zip
     needs: package
-    strategy:
-      matrix:
-        arch: [ x64, arm64 ]
     uses: ./.github/workflows/upload-sign.yml
     with:
       release_tag: ${{ inputs.release_tag }}
-      artifact_name: release-${{ inputs.target }}-${{ matrix.arch }}${{ inputs.isAot && '-aot' || '' }}
+      desktop_release: true
+      artifact_name: release-${{ inputs.target }}-x64${{ inputs.isAot && '-aot' || '' }}
       file_pattern: '*.zip'
     secrets:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}

@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='utf-8'?>
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="zh-CN" Language="2052" Codepage="65001">
+  <String Id="Caption" Value="v2rayN 简体中文版安装程序" />
+  <String Id="Tagline" Value="Windows 上最好用的 VPN 软件" />
+  <String Id="Preparing" Value="正在准备安装程序…" />
+  <String Id="HelpHeader" Value="v2rayN 安装程序帮助" />
+  <String Id="HelpMessage" Value="可以安装、重新安装或卸载 v2rayN。" />
+  <String Id="Close" Value="关闭" />
+  <String Id="InstallHeader" Value="安装 v2rayN" />
+  <String Id="InstallMessage" Value="将安装 v2rayN v[InstallerDisplayVersion]。" />
+  <String Id="Options" Value="安装选项" />
+  <String Id="Install" Value="安装" />
+  <String Id="OptionsHeader" Value="安装选项" />
+  <String Id="InstallLocation" Value="安装位置" />
+  <String Id="Browse" Value="浏览…" />
+  <String Id="DesktopShortcut" Value="创建桌面快捷方式" />
+  <String Id="StartShortcut" Value="创建开始菜单快捷方式" />
+  <String Id="Save" Value="保存" />
+  <String Id="Back" Value="返回" />
+  <String Id="ModifyHeader" Value="v2rayN 已安装" />
+  <String Id="ModifyMessage" Value="将重新安装 v2rayN v[InstallerDisplayVersion]，并保留现有配置。" />
+  <String Id="Reinstall" Value="重新安装" />
+  <String Id="Uninstall" Value="卸载" />
+  <String Id="ProgressHeader" Value="正在处理" />
+  <String Id="ProgressPackage" Value="正在处理 v2rayN…" />
+  <String Id="Cancel" Value="取消" />
+  <String Id="SuccessHeader" Value="操作完成" />
+  <String Id="SuccessUninstall" Value="已卸载 v2rayN" />
+  <String Id="SuccessInstall" Value="v2rayN 安装完成" />
+  <String Id="SuccessReinstall" Value="v2rayN 已重新安装完成" />
+  <String Id="SuccessMessage" Value="选择 “完成” 以关闭安装程序。" />
+  <String Id="Launch" Value="启动 v2rayN" />
+  <String Id="RestartNeeded" Value="请重启 Windows 以完成操作。" />
+  <String Id="Restart" Value="重启" />
+  <String Id="Done" Value="完成" />
+  <String Id="FailureHeader" Value="操作未能完成" />
+  <String Id="FailureMessage" Value="Windows Installer 报告错误，请查看安装日志。" />
+  <String Id="ViewLog" Value="查看安装日志" />
+  <String Id="ConfirmCancelMessage" Value="确定要取消当前操作吗？" />
+  <String Id="ExecuteUpgradeRelatedBundleMessage" Value="旧版 v2rayN" />
+  <String Id="FilesInUseTitle" Value="文件正在使用中" />
+  <String Id="FilesInUseLabel" Value="以下应用程序正在使用需要更新的文件：" />
+  <String Id="FilesInUseNetfxCloseRadioButton" Value="关闭这些应用程序。" />
+  <String Id="FilesInUseCloseRadioButton" Value="自动关闭上述程序，完成后尝试重新打开。" />
+  <String Id="FilesInUseDontCloseRadioButton" Value="保持上述程序运行，稍后重新启动电脑以完成处理。" />
+  <String Id="FilesInUseRetryButton" Value="重试" />
+  <String Id="FilesInUseIgnoreButton" Value="忽略" />
+  <String Id="FilesInUseExitButton" Value="退出" />
+  <String Id="FailureHyperlinkLogText" Value="查看&lt;a href=&quot;#&quot;&gt;安装日志&lt;/a&gt;" />
+  <String Id="MsiDowngradeError" Value="当前已安装较新版本，请使用同版或更新版的安装程序。" />
+  <String Id="MsiCloseAppPrompt" Value="请保存更改并关闭 v2rayN，然后继续操作。" />
+  <String Id="MsiPreviousInstallDirError" Value="无法读取上一版本的安装文件夹。" />
+  <String Id="MsiDesktopShortcut" Value="桌面快捷方式" />
+  <String Id="MsiStartShortcut" Value="开始菜单快捷方式" />
+</WixLocalization>
