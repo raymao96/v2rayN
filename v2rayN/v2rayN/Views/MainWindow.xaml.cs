@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using MaterialDesignThemes.Wpf;
 using v2rayN.Base;
@@ -152,6 +153,25 @@ public partial class MainWindow
         }
 
         WindowsManager.Instance.RegisterGlobalHotkey(_config, OnHotkeyHandler, null);
+    }
+
+    private void ToolbarMenuItem_Loaded(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (sender is MenuItem item && item.Template.FindName("PART_Popup", item) is Popup popup)
+        {
+            popup.PlacementTarget = item;
+            popup.Placement = PlacementMode.Custom;
+            popup.CustomPopupPlacementCallback = (popupSize, targetSize, offset) =>
+            {
+                var margin = (item.Template.FindName("SubMenuBorder", item) as Border)?.Margin ?? default;
+                var dpiScaleX = VisualTreeHelper.GetDpi(item).DpiScaleX;
+                return
+                [
+                    new(new System.Windows.Point(-margin.Left * dpiScaleX, targetSize.Height), PopupPrimaryAxis.Vertical),
+                    new(new System.Windows.Point(targetSize.Width - popupSize.Width + margin.Right * dpiScaleX, targetSize.Height), PopupPrimaryAxis.Vertical)
+                ];
+            };
+        }
     }
 
     #region Event
